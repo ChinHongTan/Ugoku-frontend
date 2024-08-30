@@ -1,0 +1,45 @@
+Initial Commit
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch master
+#
+# Initial commit
+#
+# Changes to be committed:
+#	new file:   .eslintrc.cjs
+#	new file:   .gitignore
+#	new file:   .prettierrc.json
+#	new file:   .vscode/extensions.json
+#	new file:   README.md
+#	new file:   env.d.ts
+#	new file:   index.html
+#	new file:   package-lock.json
+#	new file:   package.json
+#	new file:   public/favicon.ico
+#	new file:   src/App.vue
+#	new file:   src/assets/base.css
+#	new file:   src/assets/logo.svg
+#	new file:   src/assets/main.css
+#	new file:   src/components/HelloWorld.vue
+#	new file:   src/components/TheWelcome.vue
+#	new file:   src/components/WelcomeItem.vue
+#	new file:   src/components/__tests__/HelloWorld.spec.ts
+#	new file:   src/components/icons/IconCommunity.vue
+#	new file:   src/components/icons/IconDocumentation.vue
+#	new file:   src/components/icons/IconEcosystem.vue
+#	new file:   src/components/icons/IconSupport.vue
+#	new file:   src/components/icons/IconTooling.vue
+#	new file:   src/main.ts
+#	new file:   src/router/index.ts
+#	new file:   src/views/AboutView.vue
+#	new file:   src/views/AuthCallback.vue
+#	new file:   src/views/HomeView.vue
+#	new file:   tsconfig.app.json
+#	new file:   tsconfig.json
+#	new file:   tsconfig.node.json
+#	new file:   tsconfig.vitest.json
+#	new file:   vite.config.ts
+#	new file:   vitest.config.ts
+#
