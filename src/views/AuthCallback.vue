@@ -28,8 +28,8 @@ export default {
       try {
         const response = await axios.get(`http://localhost:8000/api/user?token=${token}`)
         this.userInfo = response.data.user
-        console.log('User info:', this.userInfo)
-        console.log('Username', this.userInfo.username)
+        localStorage.setItem('token', token)
+        this.$router.push('/')
       } catch (error) {
         console.error('Error fetching user info:', error)
       }

@@ -1,59 +1,28 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import AppBar from './components/AppBar.vue'
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="container">
+    <AppBar />
+    <header>
+    </header>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+    <RouterView />
+  </div>
 </template>
 
 <style scoped>
+.container {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+}
+
 header {
   line-height: 1.5;
   max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
 }
 
 @media (min-width: 1024px) {
@@ -83,3 +52,36 @@ nav a:first-of-type {
   }
 }
 </style>
+
+<script lang="ts">
+import axios from 'axios'
+
+export default {
+  name: 'AboutView',
+  data() {
+    return {
+      response: null as null | string
+    }
+  },
+  methods: {
+    async sendRequest() {
+      try {
+        const response = await axios.get('http://localhost:8000/')
+        this.response = response.data
+      } catch (error) {
+        console.error(error)
+        this.response = 'Error occurred while fetching data'
+      }
+    },
+    async login() {
+      try {
+        const response = await axios.get('http://localhost:8000/auth/discord')
+        this.response = response.data
+      } catch (error) {
+        console.error(error)
+        this.response = 'Error occurred while fetching data'
+      }
+    }
+  }
+}
+</script>
