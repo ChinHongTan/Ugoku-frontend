@@ -35,9 +35,9 @@ interface Playlist {
 }
 
 const playlists = ref<Playlist[]>([
-  { id: 1, title: 'Playlist 1', coverImage: 'https://example.com/summer.jpg' },
-  { id: 2, title: 'Playlist 2', coverImage: 'https://example.com/workout.jpg' },
-  { id: 3, title: 'Playlist 3', coverImage: 'https://example.com/chill.jpg' },
+  { id: 1, title: 'Playlist 1', coverImage: 'src/assets/kano1.jpg' },
+  { id: 2, title: 'Playlist 2', coverImage: 'src/assets/nanahira2.png' },
+  { id: 3, title: 'Playlist 3', coverImage: 'src/assets/blue-archive.jpg' },
   { id: 4, title: 'Road Trip', coverImage: 'https://example.com/roadtrip.jpg' },
   { id: 5, title: '90s Nostalgia', coverImage: 'https://example.com/90s.jpg' },
   { id: 6, title: 'Jazz Classics', coverImage: 'https://example.com/jazz.jpg' }
@@ -56,7 +56,9 @@ const navigateToAllPlaylists = () => {
 
 <style scoped>
 .playlist-section {
-  padding: 20px;
+  background-color: white;
+  padding: 20px 20px;
+  border-radius: 20px;
 }
 
 .section-header {
@@ -71,11 +73,11 @@ const navigateToAllPlaylists = () => {
 }
 
 .show-all-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
+  background-color: transparent;
+  color: black;
   padding: 10px 20px;
   border-radius: 5px;
+  border-style: solid 1px black;
   cursor: pointer;
   font-size: 16px;
 }
@@ -83,7 +85,6 @@ const navigateToAllPlaylists = () => {
 .playlist-container {
   width: 100%;
   overflow-x: auto;
-  padding-bottom: 20px;
 }
 
 .playlist-grid {
@@ -95,17 +96,18 @@ const navigateToAllPlaylists = () => {
 .playlist-item {
   flex: 0 0 auto;
   width: 200px;
-  height: 280px;
+  height: 240px;
   background-color: #fff;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
   cursor: pointer;
 }
 
 .playlist-item:hover {
   transform: translateY(-5px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: whitesmoke;
 }
 
 .playlist-cover {
@@ -115,10 +117,8 @@ const navigateToAllPlaylists = () => {
 }
 
 .playlist-info {
-  height: 80px;
-  background-color: #4caf50;
+  background-color: transparent;
   color: white;
-  padding: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -128,6 +128,7 @@ const navigateToAllPlaylists = () => {
   font-size: 1.1em;
   font-weight: bold;
   text-align: center;
+  color: black;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
