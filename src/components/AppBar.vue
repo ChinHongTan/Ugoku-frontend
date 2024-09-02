@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../utils/userStore'
@@ -11,6 +11,16 @@ interface User {
 
 const userStore = useUserStore()
 const router = useRouter()
+const searchQuery = ref('')
+
+const performSearch = () => {
+  if (searchQuery.value.trim()) {
+    console.log('Searching for:', searchQuery.value)
+    // Implement your search logic here
+    // For example, you might want to navigate to a search results page:
+    // router.push({ name: 'searchResults', query: { q: searchQuery.value } })
+  }
+}
 
 const logout = async () => {
   try {
@@ -63,11 +73,30 @@ onMounted(async () => {
 <template>
   <div class="app-bar">
     <h1 class="green">Ugoku</h1>
+
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Search for playlists, songs, or artists"
+        v-model="searchQuery"
+        @keyup.enter="performSearch"
+      />
+      <button @click="performSearch" class="search-button">
+        <span class="search-icon">
+          <font-awesome-icon :icon="['fas', 'magnifying-glass']" />
+        </span>
+      </button>
+    </div>
+
     <div class="right-content">
       <template v-if="userStore.user">
-        <img :src="userStore.user.avatar" alt="User Avatar" class="avatar" />
-        <span class="username">{{ userStore.user.username }}</span>
-        <button @click="logout" class="logout">Logout</button>
+        <div class="user-details">
+          <img :src="userStore.user.avatar" alt="User Avatar" class="avatar" />
+          <span class="username">{{ userStore.user.username }}</span>
+        </div>
+        <button @click="logout" class="logout">
+          <font-awesome-icon :icon="['fas', 'right-from-bracket']" transform="grow-3" />
+        </button>
       </template>
       <a
         v-else
@@ -102,10 +131,62 @@ h1 {
   margin: 0;
 }
 
+.search-bar {
+  flex-grow: 1;
+  max-width: 600px;
+  margin: 0 20px;
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.search-bar input {
+  flex-grow: 1;
+  height: 40px;
+  padding: 0 15px;
+  border: none;
+  font-size: 14px;
+  background-color: transparent;
+}
+
+.search-button {
+  height: 40px;
+  width: 40px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.search-icon {
+  color: #4caf50;
+  font-size: 18px;
+}
+
 .right-content {
   display: flex;
   align-items: center;
-  height: 100%;
+}
+
+.user-details {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 30px;
+  transition: background-color 0.3s;
+}
+
+.user-details:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s;
 }
 
 .avatar {
@@ -125,19 +206,53 @@ h1 {
   background-color: #f44336;
   color: white;
   border: none;
-  padding: 0px 10px;
+  padding: 10px 20px;
   cursor: pointer;
-  font-size: 18px;
-  height: 100%;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 4px;
+  margin-right: 10px;
+  transition: background-color 0.4s;
+}
+
+.logout:hover {
+  background-color: #d32f2f;
+  transition: background-color 0.4s;
 }
 
 .login {
-  font-size: 18px;
-  padding: 10px 20px;
+  font-size: 16px;
+  padding: 8px 16px;
   cursor: pointer;
   text-decoration: none;
-  height: 100%;
   display: flex;
   align-items: center;
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #4caf50;
+}
+
+@media (max-width: 768px) {
+  .app-bar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 2%;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .search-bar {
+    order: 3;
+    width: 100%;
+    max-width: none;
+    margin: 10px 0 0 0;
+  }
+
+  .right-content {
+    order: 2;
+  }
 }
 </style>

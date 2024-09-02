@@ -1,54 +1,41 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import AppBar from './components/AppBar.vue'
+import LeftSidebar from './components/LeftSidebar.vue'
+import RightSidebar from './components/RightSidebar.vue'
+import FloatingPlayerControl from './components/FloatingPlayerControl.vue'
 </script>
 
 <template>
-  <div class="container">
+  <div class="app-container">
     <AppBar />
-    <header>
-    </header>
-
-    <RouterView />
+    <LeftSidebar />
+    <main class="main-content">
+      <RouterView />
+    </main>
+    <RightSidebar />
+    <FloatingPlayerControl />
   </div>
 </template>
 
 <style scoped>
-.container {
+.app-container {
   display: flex;
-  flex-direction: row;
   min-height: 100vh;
 }
 
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.main-content {
+  flex-grow: 1;
+  margin-left: 250px; /* Width of the LeftSidebar */
+  margin-right: 300px; /* Width of the RightSidebar */
+  margin-top: 60px; /* Height of the AppBar */
+  padding: 20px;
+  padding-bottom: 100px;
 }
 
 @media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
+  .main-content {
+    margin-right: 30px; /* Width of the collapsed RightSidebar */
   }
 }
 </style>

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import AllPlaylists from '../components/AllPlaylists.vue'
 import AuthCallbackHandler from '../components/AuthCallbackHandler.vue'
 
 const router = createRouter({
@@ -18,6 +19,11 @@ const router = createRouter({
     // which is lazy-loaded when the route is visited.
     // component: () => import('../views/AboutView.vue')
     // },
+    {
+      path: '/all-playlists',
+      name: 'allPlaylists',
+      component: AllPlaylists
+    },
     {
       path: '/auth-callback',
       name: 'AuthCallback',
