@@ -12,7 +12,10 @@ import {
   faVolumeHigh,
   faRepeat,
   faShuffle,
-  faCarrot
+  faCarrot,
+  faCircle,
+  faChevronRight,
+  faChevronDown
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -27,7 +30,10 @@ library.add(
   faVolumeHigh,
   faRepeat,
   faShuffle,
-  faCarrot
+  faCarrot,
+  faCircle,
+  faChevronRight,
+  faChevronDown
 )
 
 export default FontAwesomeIcon

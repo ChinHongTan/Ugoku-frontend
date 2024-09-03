@@ -1,20 +1,39 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
+import { useUserStore } from './utils/userStore'
+import { useSidebarStore } from './utils/sidebarStore'
 import AppBar from './components/AppBar.vue'
 import LeftSidebar from './components/LeftSidebar.vue'
 import RightSidebar from './components/RightSidebar.vue'
 import FloatingPlayerControl from './components/FloatingPlayerControl.vue'
+
+const userStore = useUserStore()
+const isLoggedIn = computed(() => !!userStore.user)
+
+const sidebarStore = useSidebarStore()
+const mainContentClass = computed(() => ({
+  'sidebar-expanded': !sidebarStore.isCollapsed,
+  'sidebar-collapsed': sidebarStore.isCollapsed
+}))
 </script>
 
 <template>
-  <div class="app-container">
+  <div class="app-container" :class="{ 'logged-in': isLoggedIn }">
     <AppBar />
-    <LeftSidebar />
-    <main class="main-content">
-      <RouterView />
-    </main>
-    <RightSidebar />
-    <FloatingPlayerControl />
+    <template v-if="isLoggedIn">
+      <LeftSidebar />
+      <main class="main-content" :class="mainContentClass">
+        <RouterView />
+      </main>
+      <RightSidebar />
+      <FloatingPlayerControl />
+    </template>
+    <template v-else>
+      <main class="welcome-content">
+        <RouterView />
+      </main>
+    </template>
   </div>
 </template>
 
@@ -22,6 +41,11 @@ import FloatingPlayerControl from './components/FloatingPlayerControl.vue'
 .app-container {
   display: flex;
   min-height: 100vh;
+  flex-direction: column;
+}
+
+.app-container.logged-in {
+  flex-direction: row;
 }
 
 .main-content {
@@ -31,6 +55,21 @@ import FloatingPlayerControl from './components/FloatingPlayerControl.vue'
   margin-top: 60px; /* Height of the AppBar */
   padding: 20px;
   padding-bottom: 100px;
+  transition: margin-left 0.3s ease-out;
+}
+
+.main-content.sidebar-expanded {
+  margin-left: 250px; /* Width of the expanded LeftSidebar */
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 60px; /* Width of the collapsed LeftSidebar */
+}
+
+.welcome-content {
+  flex-grow: 1;
+  margin-top: 60px; /* Height of the AppBar */
+  padding: 20px;
 }
 
 @media (min-width: 1024px) {

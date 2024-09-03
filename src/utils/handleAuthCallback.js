@@ -1,6 +1,6 @@
 import axios from 'axios'
 import router from '../router'
-import { useUserStore } from '../utils/userStore'
+import { useUserStore } from '@/utils/userStore'
 
 export async function handleAuthCallback() {
   const userStore = useUserStore()

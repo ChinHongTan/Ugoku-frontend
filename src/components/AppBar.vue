@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '../utils/userStore'
+import { useUserStore } from '@/utils/userStore'
+import { useSidebarStore } from '@/utils/sidebarStore'
 
 interface User {
   avatar: string
@@ -10,8 +11,15 @@ interface User {
 }
 
 const userStore = useUserStore()
+const sidebarStore = useSidebarStore()
+
+const isLoggedIn = computed(() => !!userStore.user)
 const router = useRouter()
 const searchQuery = ref('')
+
+const toggleSidebar = () => {
+  sidebarStore.toggle()
+}
 
 const performSearch = () => {
   if (searchQuery.value.trim()) {
@@ -72,9 +80,15 @@ onMounted(async () => {
 
 <template>
   <div class="app-bar">
-    <h1 class="green">Ugoku</h1>
+    <div class="logo-wrapper">
+      <button @click="toggleSidebar" class="toggle-sidebar-btn">
+        <font-awesome-icon :icon="['fas', 'bars']" />
+      </button>
+      <img src="../assets/ugoku.png" alt="Ugoku Logo" class="logo" />
+      <h1 class="green">Ugoku</h1>
+    </div>
 
-    <div class="search-bar">
+    <div v-if="isLoggedIn" class="search-bar">
       <input
         type="text"
         placeholder="Search for playlists, songs, or artists"
@@ -121,8 +135,29 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   height: 60px;
-  padding: 0 2%;
+  padding: 0 20px;
   box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-sidebar-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--vt-c-black-mute);
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
 }
 
 h1 {
@@ -238,6 +273,12 @@ h1 {
     flex-wrap: wrap;
     height: auto;
     padding: 10px 2%;
+  }
+
+  .logo-wrapper {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 10px;
   }
 
   h1 {

@@ -59,6 +59,7 @@ const navigateToAllPlaylists = () => {
   background-color: white;
   padding: 20px 20px;
   border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .section-header {
@@ -91,6 +92,7 @@ const navigateToAllPlaylists = () => {
   display: flex;
   gap: 20px;
   width: max-content;
+  padding-top: 5px;
 }
 
 .playlist-item {
@@ -98,7 +100,8 @@ const navigateToAllPlaylists = () => {
   width: 200px;
   height: 240px;
   background-color: #fff;
-  border-radius: 10px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
   overflow: hidden;
   transition: transform 0.3s ease;
   cursor: pointer;
@@ -108,6 +111,7 @@ const navigateToAllPlaylists = () => {
   transform: translateY(-5px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   background-color: whitesmoke;
+  border: 1px solid var(--color-border-hover);
 }
 
 .playlist-cover {
