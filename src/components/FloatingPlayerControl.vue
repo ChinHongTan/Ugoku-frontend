@@ -2,33 +2,55 @@
   <div class="floating-player-control">
     <div class="player-content">
       <div class="control-buttons">
-        <button class="control-btn shuffle-btn">
+        <button class="control-btn shuffle-btn" :disabled="!isServerSelected">
           <font-awesome-icon :icon="['fas', 'shuffle']" />
         </button>
-        <button class="control-btn previous-btn">
+        <button class="control-btn previous-btn" :disabled="!isServerSelected">
           <font-awesome-icon :icon="['fas', 'backward']" />
         </button>
-        <PlayPauseButton />
-        <button class="control-btn next-btn">
+        <PlayPauseButton :disabled="!isServerSelected" />
+        <button class="control-btn next-btn" :disabled="!isServerSelected">
           <font-awesome-icon :icon="['fas', 'forward']" />
         </button>
-        <button class="control-btn repeat-btn">
+        <button class="control-btn repeat-btn" :disabled="!isServerSelected">
           <font-awesome-icon :icon="['fas', 'carrot']" />
         </button>
       </div>
       <div class="info-section">
-        <img
-          v-if="isPlaying"
-          class="album-cover"
-          :src="currentSong.cover"
-          width="40px"
-          height="40px"
-        />
-        <DefaultAlbumCover v-else />
+        <div class="album-cover-container" :class="{ rotating: isPlaying }">
+          <img
+            v-if="currentSong && currentSong.cover"
+            class="album-cover"
+            :src="currentSong.cover"
+            width="40px"
+            height="40px"
+          />
+          <DefaultAlbumCover v-else />
+        </div>
         <div class="song-info">
-          <p class="song-title">{{ currentSong.title }}</p>
-          <p class="song-artist">{{ currentSong.artist }}</p>
-          <input type="range" class="progress-bar" min="0" max="100" value="0" ref="progressBar" />
+          <p class="song-title">
+            {{
+              isServerSelected
+                ? currentSong
+                  ? currentSong.title
+                  : 'Not playing'
+                : 'Select a server'
+            }}
+          </p>
+          <p class="song-artist">
+            {{
+              isServerSelected ? (currentSong ? currentSong.artist : '-') : 'to see player controls'
+            }}
+          </p>
+          <input
+            type="range"
+            class="progress-bar"
+            min="0"
+            max="100"
+            value="0"
+            ref="progressBar"
+            :disabled="!isServerSelected"
+          />
         </div>
       </div>
       <div class="volume-controls">
@@ -42,6 +64,7 @@
           max="100"
           value="100"
           ref="volumeSlider"
+          :disabled="!isServerSelected"
         />
         <i class="volume-icon">
           <font-awesome-icon :icon="['fas', 'volume-high']" />
@@ -60,7 +83,8 @@ import PlayPauseButton from '@/components/PlayPauseButton.vue'
 const playerStore = usePlayerStore()
 
 const currentSong = computed(() => playerStore.currentSong)
-const isPlaying = computed(() => currentSong.value.title !== 'Not playing')
+const isPlaying = computed(() => playerStore.isPlaying)
+const isServerSelected = computed(() => playerStore.selectedServerId !== null)
 
 const volumeSlider = ref<HTMLInputElement | null>(null)
 const progressBar = ref<HTMLInputElement | null>(null)
@@ -145,11 +169,34 @@ onUnmounted(() => {
   font-size: 20px;
 }
 
-.album-cover {
-  border-radius: 50%;
-  margin-right: 15px;
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.album-cover-container {
   width: 40px;
   height: 40px;
+  margin-right: 15px;
+}
+
+.album-cover-container.rotating {
+  animation: rotate 10s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.album-cover {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
   object-fit: cover;
 }
 

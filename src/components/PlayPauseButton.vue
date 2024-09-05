@@ -1,5 +1,5 @@
 <template>
-  <button @click="togglePlayPause" class="play-pause-btn">
+  <button @click="togglePlayPause" class="play-pause-btn" :disabled="disabled">
     <span class="material-symbols-rounded">
       {{ isPlaying ? 'pause' : 'play_arrow' }}
     </span>
@@ -21,6 +21,13 @@ const togglePlayPause = () => {
     playerStore.play()
   }
 }
+
+defineProps({
+  disabled: {
+    type: Boolean,
+    default: false
+  }
+})
 </script>
 
 <style scoped>
@@ -31,6 +38,11 @@ const togglePlayPause = () => {
   cursor: pointer;
   padding: 5px, 5px;
   color: white;
+}
+
+.play-pause-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .material-symbols-rounded {

@@ -11,122 +11,70 @@ const sidebarClass = computed(() => ({ 'left-sidebar': true, collapsed: sidebarS
 
 const isActiveNowOpen = ref(false)
 const activeServers = ref<{ id: string; name: string; icon?: string }[]>([])
+const selectedServerId = ref<string | null>(null)
 
 const toggleActiveNow = () => {
   isActiveNowOpen.value = !isActiveNowOpen.value
-
-  // Subscribe to active servers if the section is open
-  // Unsubscribe and clear the array if the section is closed
-  if (isActiveNowOpen.value) {
-    subscribeToActiveServers()
-  } else {
-    eventSource?.close()
-    activeServers.value = []
-  }
 }
 
 let eventSource: EventSourcePolyfill | null = null
 
 const subscribeToActiveServers = () => {
-  eventSource = new EventSourcePolyfill('http://localhost:8000/play/stream')
-  console.log('EventSource created:', eventSource)
+  if (eventSource) return // Prevent multiple connections
 
-  eventSource.onopen = (event) => {
-    console.log('SSE connection opened:', event)
-  }
+  eventSource = new EventSourcePolyfill('http://localhost:8000/play/stream')
 
   eventSource.onmessage = (event) => {
-    console.log('Received SSE message:', event)
-    console.log('Event data:', event.data)
     try {
       const data = JSON.parse(event.data)
-      console.log('Parsed SSE data:', data)
       if (data && data.guilds) {
-        console.log('Updating activeServers with:', data.guilds)
         activeServers.value = data.guilds.map((guild: any) => ({
           id: guild.id,
           name: guild.name,
           icon: guild.icon || 'path/to/default/icon.png'
         }))
-        console.log('Updated activeServers:', activeServers.value)
 
-        // Update the current song in the player store
-        let currentSong = data.guilds[0]?.currentSong
-        if (currentSong) {
-          playerStore.updateCurrentSong({
-            title: currentSong.title,
-            artist: currentSong.artist,
-            album: currentSong.album,
-            cover: currentSong.cover,
-            duration: currentSong.duration
-          })
-        } else {
-          playerStore.updateCurrentSong({
-            title: 'Not playing',
-            artist: '-',
-            album: '-',
-            cover: '',
-            duration: 0
-          })
-        }
-      } else {
-        console.log('Received data does not contain guilds:', data)
+        // Update the server songs in the player store
+        data.guilds.forEach((guild: any) => {
+          const currentSong = guild.currentSong
+          if (currentSong) {
+            playerStore.updateServerSong(guild.id, {
+              title: currentSong.title,
+              artist: currentSong.artist,
+              album: currentSong.album,
+              cover: currentSong.cover,
+              duration: currentSong.duration
+            })
+          } else {
+            playerStore.updateServerSong(guild.id, null)
+          }
+        })
       }
     } catch (error) {
       console.error('Error parsing SSE data:', error)
-      console.log('Raw event data:', event.data)
     }
   }
 
-  eventSource.onerror = () => {
+  eventSource.onerror = (error) => {
     console.error('SSE error:', error)
     eventSource?.close()
+    eventSource = null
   }
+}
 
-  console.log('Event handlers attached:', {
-    onopen: eventSource.onopen,
-    onmessage: eventSource.onmessage,
-    onerror: eventSource.onerror
-  })
+const handleServerClick = (serverId: string) => {
+  selectedServerId.value = serverId
+  playerStore.setSelectedServer(serverId)
 }
 
 onMounted(() => {
-  console.log('Component mounted, subscribing to active servers...')
   subscribeToActiveServers()
+  playerStore.clearSelectedServer() // Clear any previously selected server
 })
 
 onUnmounted(() => {
   eventSource?.close()
 })
-
-// Transition hooks
-const beforeEnter = (el: Element) => {
-  console.log('Before enter triggered')
-  el.style.opacity = '0'
-  el.style.height = '0'
-}
-
-const enter = (el: Element, done: () => void) => {
-  console.log('Enter animation triggered')
-  const delay = el.dataset.index ? parseInt(el.dataset.index) * 100 : 0
-  setTimeout(() => {
-    el.style.opacity = '1'
-    el.style.height = 'auto'
-  }, delay)
-  setTimeout(done, delay + 300)
-}
-
-const leave = (el: Element, done: () => void) => {
-  console.log('Leave animation triggered')
-  const delay = el.dataset.index
-    ? (activeServers.value.length - 1 - parseInt(el.dataset.index)) * 100
-    : 0
-  setTimeout(() => {
-    el.style.opacity = '0'
-    el.style.height = '0'
-  }, delay)
-  setTimeout(done, delay + 300)
-}
 </script>
 
 <template>
@@ -144,20 +92,15 @@ const leave = (el: Element, done: () => void) => {
           :class="{ rotate: isActiveNowOpen }"
         />
       </h3>
-      <TransitionGroup
-        v-if="!sidebarStore.isCollapsed"
-        name="list"
-        tag="ul"
-        class="server-list"
-        @before-enter="beforeEnter"
-        @enter="enter"
-        @leave="leave"
-      >
+      <TransitionGroup name="list" tag="ul" class="server-list">
         <li
           v-for="(server, index) in activeServers"
+          v-if="isActiveNowOpen"
           :key="server.id"
           class="server-card"
-          :data-index="index"
+          :class="{ selected: selectedServerId === server.id }"
+          :style="{ transitionDelay: `${index * 100}ms` }"
+          @click="handleServerClick(server.id)"
         >
           <img :src="server.icon" :alt="server.name" class="server-avatar" />
           <span v-if="!sidebarStore.isCollapsed" class="server-name">{{ server.name }}</span>
@@ -218,6 +161,10 @@ const leave = (el: Element, done: () => void) => {
   opacity: 0;
 }
 
+.collapsed .server-icon {
+  margin: 0;
+}
+
 .toggle-icon {
   font-size: 15px;
   color: black;
@@ -242,8 +189,17 @@ const leave = (el: Element, done: () => void) => {
   background-color: var(--color-background-mute);
   padding: 10px;
   margin-bottom: 5px;
-  border-radius: 4px;
+  border-radius: 50px;
   transition: all 0.2s ease-out;
+  cursor: pointer;
+}
+
+.server-card:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.server-card.selected {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .server-avatar {
@@ -260,10 +216,6 @@ const leave = (el: Element, done: () => void) => {
   text-overflow: ellipsis;
 }
 
-.collapsed .server-card {
-  justify-content: center;
-}
-
 .collapsed .server-name {
   display: none;
 }
@@ -277,11 +229,5 @@ const leave = (el: Element, done: () => void) => {
 .list-leave-to {
   opacity: 0;
   transform: translateY(-30px);
-}
-
-.list-enter-to,
-.list-leave-from {
-  opacity: 1;
-  transform: translateY(0);
 }
 </style>
