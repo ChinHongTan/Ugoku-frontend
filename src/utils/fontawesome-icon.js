@@ -15,7 +15,8 @@ import {
   faCarrot,
   faCircle,
   faChevronRight,
-  faChevronDown
+  faChevronDown,
+  faMusic
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -33,7 +34,8 @@ library.add(
   faCarrot,
   faCircle,
   faChevronRight,
-  faChevronDown
+  faChevronDown,
+  faMusic
 )
 
 export default FontAwesomeIcon

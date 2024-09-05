@@ -1,28 +1,93 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useSidebarStore } from '@/utils/sidebarStore'
+import { usePlayerStore } from '@/utils/playerStore'
+import { EventSourcePolyfill } from 'event-source-polyfill'
+
 const sidebarStore = useSidebarStore()
+const playerStore = usePlayerStore()
 
 const sidebarClass = computed(() => ({ 'left-sidebar': true, collapsed: sidebarStore.isCollapsed }))
 
 const isActiveNowOpen = ref(false)
-const activeServers = ref<{ id: string; name: string }[]>([])
+const activeServers = ref<{ id: string; name: string; icon?: string }[]>([])
 
 const toggleActiveNow = () => {
   isActiveNowOpen.value = !isActiveNowOpen.value
 }
 
-const updateActiveServers = (servers: { id: string; name: string }[]) => {
-  activeServers.value = servers
+let eventSource: EventSourcePolyfill | null = null
+
+const subscribeToActiveServers = () => {
+  eventSource = new EventSourcePolyfill('http://localhost:8000/play/stream')
+  console.log('EventSource created:', eventSource)
+
+  eventSource.onopen = (event) => {
+    console.log('SSE connection opened:', event)
+  }
+
+  eventSource.onmessage = (event) => {
+    console.log('Received SSE message:', event)
+    console.log('Event data:', event.data)
+    try {
+      const data = JSON.parse(event.data)
+      console.log('Parsed SSE data:', data)
+      if (data && data.guilds) {
+        console.log('Updating activeServers with:', data.guilds)
+        activeServers.value = data.guilds.map((guild: any) => ({
+          id: guild.id,
+          name: guild.name,
+          icon: guild.icon || 'path/to/default/icon.png'
+        }))
+        console.log('Updated activeServers:', activeServers.value)
+
+        // Update the current song in the player store
+        let currentSong = data.guilds[0]?.currentSong
+        if (currentSong) {
+          playerStore.updateCurrentSong({
+            title: currentSong.title,
+            artist: currentSong.artist,
+            album: currentSong.album,
+            cover: currentSong.cover,
+            duration: currentSong.duration
+          })
+        } else {
+          playerStore.updateCurrentSong({
+            title: 'Not playing',
+            artist: '-',
+            album: '-',
+            cover: '',
+            duration: 0
+          })
+        }
+      } else {
+        console.log('Received data does not contain guilds:', data)
+      }
+    } catch (error) {
+      console.error('Error parsing SSE data:', error)
+      console.log('Raw event data:', event.data)
+    }
+  }
+
+  eventSource.onerror = () => {
+    console.error('SSE error:', error)
+    eventSource?.close()
+  }
+
+  console.log('Event handlers attached:', {
+    onopen: eventSource.onopen,
+    onmessage: eventSource.onmessage,
+    onerror: eventSource.onerror
+  })
 }
 
 onMounted(() => {
-  updateActiveServers([
-    { id: '1', name: 'Server A' },
-    { id: '2', name: 'Server B' },
-    { id: '3', name: 'Server C' }
-  ])
+  console.log('Component mounted, subscribing to active servers...')
+  subscribeToActiveServers()
+})
+
+onUnmounted(() => {
+  eventSource?.close()
 })
 
 // Transition hooks
@@ -68,7 +133,7 @@ const leave = (el: HTMLElement, done: () => void) => {
         />
       </h3>
       <TransitionGroup
-        v-if="!sidebarStore.isCollapsed"
+        v-if="!sidebarStore.isCollapsed && isActiveNowOpen"
         name="list"
         tag="div"
         class="server-list"
@@ -77,13 +142,15 @@ const leave = (el: HTMLElement, done: () => void) => {
         @leave="leave"
       >
         <div
-          v-if="isActiveNowOpen"
           v-for="(server, index) in activeServers"
           :key="server.id"
           class="server-card"
           :data-index="index"
         >
-          {{ server.name }}
+          <img :src="server.icon" :alt="server.name" class="server-avatar" />
+          <span v-if="!sidebarStore.isCollapsed || isActiveNowOpen" class="server-name">{{
+            server.name
+          }}</span>
         </div>
       </TransitionGroup>
     </div>
@@ -158,11 +225,35 @@ const leave = (el: HTMLElement, done: () => void) => {
 }
 
 .server-card {
+  display: flex;
+  align-items: center;
   background-color: var(--color-background-mute);
   padding: 10px;
   margin-bottom: 5px;
   border-radius: 4px;
   transition: all 0.2s ease-out;
+}
+
+.server-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.server-name {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collapsed .server-card {
+  justify-content: center;
+}
+
+.collapsed .server-name {
+  display: none;
 }
 
 .list-move,

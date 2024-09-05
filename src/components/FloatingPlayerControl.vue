@@ -8,9 +8,7 @@
         <button class="control-btn previous-btn">
           <font-awesome-icon :icon="['fas', 'backward']" />
         </button>
-        <button class="control-btn play-pause-btn">
-          <font-awesome-icon :icon="['fas', 'play']" />
-        </button>
+        <PlayPauseButton />
         <button class="control-btn next-btn">
           <font-awesome-icon :icon="['fas', 'forward']" />
         </button>
@@ -19,10 +17,17 @@
         </button>
       </div>
       <div class="info-section">
-        <img class="album-cover" src="../assets/nanahira.jpg" width="40px" height="40px" />
+        <img
+          v-if="isPlaying"
+          class="album-cover"
+          :src="currentSong.cover"
+          width="40px"
+          height="40px"
+        />
+        <DefaultAlbumCover v-else />
         <div class="song-info">
-          <p class="song-title">Heeartbeeat Oveerheeat!!!!</p>
-          <p class="song-artist">Camellia, Nanahira</p>
+          <p class="song-title">{{ currentSong.title }}</p>
+          <p class="song-artist">{{ currentSong.artist }}</p>
           <input type="range" class="progress-bar" min="0" max="100" value="0" ref="progressBar" />
         </div>
       </div>
@@ -47,7 +52,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { usePlayerStore } from '@/utils/playerStore'
+import DefaultAlbumCover from '@/components/DefaultAlbumCover.vue'
+import PlayPauseButton from '@/components/PlayPauseButton.vue'
+
+const playerStore = usePlayerStore()
+
+const currentSong = computed(() => playerStore.currentSong)
+const isPlaying = computed(() => currentSong.value.title !== 'Not playing')
 
 const volumeSlider = ref<HTMLInputElement | null>(null)
 const progressBar = ref<HTMLInputElement | null>(null)
@@ -132,15 +145,12 @@ onUnmounted(() => {
   font-size: 20px;
 }
 
-.play-pause-btn {
-  color: white;
-  font-size: 30px;
-  padding: 5px 5px;
-}
-
 .album-cover {
   border-radius: 50%;
   margin-right: 15px;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
 }
 
 .info-section,
@@ -310,11 +320,6 @@ onUnmounted(() => {
   .control-btn {
     font-size: 12px;
     padding: 8px 12px;
-  }
-
-  .play-pause-btn {
-    font-size: 14px;
-    padding: 8px 15px;
   }
 
   .progress-bar {
