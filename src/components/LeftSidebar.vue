@@ -14,6 +14,15 @@ const activeServers = ref<{ id: string; name: string; icon?: string }[]>([])
 
 const toggleActiveNow = () => {
   isActiveNowOpen.value = !isActiveNowOpen.value
+
+  // Subscribe to active servers if the section is open
+  // Unsubscribe and clear the array if the section is closed
+  if (isActiveNowOpen.value) {
+    subscribeToActiveServers()
+  } else {
+    eventSource?.close()
+    activeServers.value = []
+  }
 }
 
 let eventSource: EventSourcePolyfill | null = null
@@ -91,12 +100,14 @@ onUnmounted(() => {
 })
 
 // Transition hooks
-const beforeEnter = (el: HTMLElement) => {
+const beforeEnter = (el: Element) => {
+  console.log('Before enter triggered')
   el.style.opacity = '0'
   el.style.height = '0'
 }
 
-const enter = (el: HTMLElement, done: () => void) => {
+const enter = (el: Element, done: () => void) => {
+  console.log('Enter animation triggered')
   const delay = el.dataset.index ? parseInt(el.dataset.index) * 100 : 0
   setTimeout(() => {
     el.style.opacity = '1'
@@ -105,7 +116,8 @@ const enter = (el: HTMLElement, done: () => void) => {
   setTimeout(done, delay + 300)
 }
 
-const leave = (el: HTMLElement, done: () => void) => {
+const leave = (el: Element, done: () => void) => {
+  console.log('Leave animation triggered')
   const delay = el.dataset.index
     ? (activeServers.value.length - 1 - parseInt(el.dataset.index)) * 100
     : 0
@@ -133,25 +145,23 @@ const leave = (el: HTMLElement, done: () => void) => {
         />
       </h3>
       <TransitionGroup
-        v-if="!sidebarStore.isCollapsed && isActiveNowOpen"
+        v-if="!sidebarStore.isCollapsed"
         name="list"
-        tag="div"
+        tag="ul"
         class="server-list"
         @before-enter="beforeEnter"
         @enter="enter"
         @leave="leave"
       >
-        <div
+        <li
           v-for="(server, index) in activeServers"
           :key="server.id"
           class="server-card"
           :data-index="index"
         >
           <img :src="server.icon" :alt="server.name" class="server-avatar" />
-          <span v-if="!sidebarStore.isCollapsed || isActiveNowOpen" class="server-name">{{
-            server.name
-          }}</span>
-        </div>
+          <span v-if="!sidebarStore.isCollapsed" class="server-name">{{ server.name }}</span>
+        </li>
       </TransitionGroup>
     </div>
   </div>
@@ -222,6 +232,8 @@ const leave = (el: HTMLElement, done: () => void) => {
 .server-list {
   padding: 10px;
   overflow: hidden;
+  list-style-type: none;
+  margin: 0;
 }
 
 .server-card {
@@ -256,16 +268,20 @@ const leave = (el: HTMLElement, done: () => void) => {
   display: none;
 }
 
-.list-move,
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
-  height: 0;
   transform: translateY(-30px);
+}
+
+.list-enter-to,
+.list-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>
