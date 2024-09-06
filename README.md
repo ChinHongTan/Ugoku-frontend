@@ -1,6 +1,6 @@
 # Ugoku-frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+A dashboard for [Ugoku-v2](https://github.com/ChinHongTan/Ugoku-v2) written with Vue! This project is still under development, so do not expect anything here to work on your device.
 
 ## Recommended IDE Setup
 
@@ -43,3 +43,9 @@ npm run test:unit
 ```sh
 npm run lint
 ```
+
+### To-Do List
+
+- [ ] Make the player (play/pause, skip, loop, seek) work with discord bot
+- [ ] UI Improvements
+- [ ] Have fun with my crazy ideas
