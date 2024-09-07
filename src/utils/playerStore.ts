@@ -20,7 +20,8 @@ export const usePlayerStore = defineStore('player', {
     isPlaying: false,
     currentSong: null as Song | null,
     serverSongs: [] as ServerSong[],
-    selectedServerId: null as string | null
+    selectedServerId: null as string | null,
+    volume: 100
   }),
   actions: {
     updateServerSong(serverId: string, song: Song | null) {
@@ -76,6 +77,21 @@ export const usePlayerStore = defineStore('player', {
       this.currentSong = null
       this.isPlaying = false
       this.selectedServerId = null
+    },
+    setVolume(volume: number) {
+      this.volume = volume
+      // if (this.selectedServerId) {
+      //   axios.post(
+      //     'http://localhost:8000/api/playback/volume',
+      //     { guildId: this.selectedServerId, volume },
+      //     {
+      //       headers: {
+      //         'Content-Type': 'application/json',
+      //         Authorization: `Bearer ${localStorage.getItem('token')}`
+      //       }
+      //     }
+      //   )
+      // }
     }
   }
 })

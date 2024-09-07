@@ -64,23 +64,7 @@
           />
         </div>
       </div>
-      <div class="volume-controls">
-        <i class="volume-icon">
-          <font-awesome-icon :icon="['fas', 'volume-low']" />
-        </i>
-        <input
-          type="range"
-          class="volume-slider"
-          min="0"
-          max="100"
-          value="100"
-          ref="volumeSlider"
-          :disabled="!isServerSelected"
-        />
-        <i class="volume-icon">
-          <font-awesome-icon :icon="['fas', 'volume-high']" />
-        </i>
-      </div>
+      <VolumeControl :isServerSelected="isServerSelected" />
     </div>
   </div>
 </template>
@@ -90,15 +74,14 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { usePlayerStore } from '@/utils/playerStore'
 import DefaultAlbumCover from '@/components/DefaultAlbumCover.vue'
 import PlayPauseButton from '@/components/PlayPauseButton.vue'
+import VolumeControl from '@/components/FloatingPlayerControl/VolumeControl.vue'
 
 const playerStore = usePlayerStore()
-const emit = defineEmits(['playbackFinished'])
 
 const currentSong = computed(() => playerStore.currentSong)
 const isPlaying = computed(() => playerStore.isPlaying)
 const isServerSelected = computed(() => playerStore.selectedServerId !== null)
 
-const volumeSlider = ref<HTMLInputElement | null>(null)
 const progressBar = ref<HTMLInputElement | null>(null)
 const currentPosition = ref(0)
 
@@ -119,13 +102,6 @@ const calculateCurrentPosition = () => {
     return Math.min(elapsedTime, currentSong.value.duration)
   }
   return 0
-}
-
-const updateSliderValue = () => {
-  if (volumeSlider.value) {
-    const volume = (parseInt(volumeSlider.value.value) / parseInt(volumeSlider.value.max)) * 100
-    volumeSlider.value.style.setProperty('--value', `${volume}%`)
-  }
 }
 
 const updateProgressValue = () => {
@@ -190,13 +166,7 @@ const formatTime = (seconds: number): string => {
 }
 
 onMounted(() => {
-  volumeSlider.value = document.querySelector('.volume-slider')
   progressBar.value = document.querySelector('.progress-bar')
-
-  if (volumeSlider.value) {
-    volumeSlider.value.addEventListener('input', updateSliderValue)
-    updateSliderValue() // Set initial value
-  }
 
   if (progressBar.value) {
     progressBar.value.addEventListener('input', updateProgressValue)
@@ -209,10 +179,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (volumeSlider.value) {
-    volumeSlider.value.removeEventListener('input', updateSliderValue)
-  }
-
   if (progressBar.value) {
     progressBar.value.removeEventListener('input', updateProgressValue)
   }
@@ -348,29 +314,12 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.volume-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-right: 30px;
-}
-
-.volume-slider {
-  width: 80px;
-}
-
-.volume-icon {
-  font-size: 14px;
-  color: white;
-}
-
 .progress-bar {
   width: 100%;
   margin-top: 5px;
 }
 
-.progress-bar,
-.volume-slider {
+.progress-bar {
   -webkit-appearance: none;
   height: 4px;
   border-radius: 5px;
@@ -382,15 +331,12 @@ onUnmounted(() => {
 }
 
 .progress-bar:hover,
-.progress-bar:active,
-.volume-slider:hover,
-.volume-slider:active {
+.progress-bar:active {
   height: 5px;
   background: white;
 }
 
-.progress-bar::-webkit-slider-thumb,
-.volume-slider::-webkit-slider-thumb {
+.progress-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 0;
@@ -400,8 +346,7 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.progress-bar::-moz-range-thumb,
-.volume-slider::-moz-range-thumb {
+.progress-bar::-moz-range-thumb {
   width: 0;
   height: 0;
   background: transparent;
@@ -409,8 +354,7 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.progress-bar:hover::-moz-range-thumb,
-.volume-slider:hover::-moz-range-thumb {
+.progress-bar:hover::-moz-range-thumb {
   width: 15px;
   height: 15px;
   border-radius: 50%;
@@ -420,9 +364,7 @@ onUnmounted(() => {
 }
 
 .progress-bar:hover::-webkit-slider-thumb,
-.progress-bar:active::-webkit-slider-thumb,
-.volume-slider:hover::-webkit-slider-thumb,
-.volume-slider:active::-webkit-slider-thumb {
+.progress-bar:active::-webkit-slider-thumb {
   width: 15px;
   height: 15px;
   border-radius: 50%;
@@ -431,8 +373,7 @@ onUnmounted(() => {
   z-index: 2;
 }
 
-.progress-bar::-moz-range-progress,
-.volume-slider::-moz-range-progress {
+.progress-bar::-moz-range-progress {
   background-color: #4caf50;
   height: 5px;
   border-radius: 5px;
@@ -443,8 +384,7 @@ onUnmounted(() => {
 }
 
 /* For WebKit browsers, create a filled effect */
-.progress-bar::before,
-.volume-slider::before {
+.progress-bar::before {
   content: '';
   position: absolute;
   top: 0;

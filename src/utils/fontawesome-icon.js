@@ -8,15 +8,11 @@ import {
   faPlay,
   faBackward,
   faForward,
-  faVolumeLow,
-  faVolumeHigh,
   faRepeat,
   faShuffle,
   faCarrot,
   faCircle,
-  faChevronRight,
-  faChevronDown,
-  faMusic
+  faChevronRight
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -27,15 +23,11 @@ library.add(
   faPlay,
   faBackward,
   faForward,
-  faVolumeLow,
-  faVolumeHigh,
   faRepeat,
   faShuffle,
   faCarrot,
   faCircle,
-  faChevronRight,
-  faChevronDown,
-  faMusic
+  faChevronRight
 )
 
 export default FontAwesomeIcon
