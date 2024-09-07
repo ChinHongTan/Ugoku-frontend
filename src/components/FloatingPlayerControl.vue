@@ -37,19 +37,30 @@
                 : 'Select a server'
             }}
           </p>
-          <p class="song-artist">
-            {{
-              isServerSelected ? (currentSong ? currentSong.artist : '-') : 'to see player controls'
-            }}
-          </p>
+          <div class="artist-and-timer">
+            <p class="song-artist">
+              {{
+                isServerSelected
+                  ? currentSong
+                    ? currentSong.artist
+                    : '-'
+                  : 'to see player controls'
+              }}
+            </p>
+            <div class="timer">
+              {{ formatTime(currentPosition) }} /
+              {{ formatTime(currentSong ? currentSong.duration / 1000 : 0) }}
+            </div>
+          </div>
           <input
             type="range"
             class="progress-bar"
-            min="0"
-            max="100"
-            value="0"
+            :min="0"
+            :max="currentSong ? currentSong.duration / 1000 : 0"
+            :value="currentPosition"
+            @input="onProgressChange"
             ref="progressBar"
-            :disabled="!isServerSelected"
+            :disabled="!isServerSelected || !currentSong"
           />
         </div>
       </div>
@@ -75,12 +86,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { usePlayerStore } from '@/utils/playerStore'
 import DefaultAlbumCover from '@/components/DefaultAlbumCover.vue'
 import PlayPauseButton from '@/components/PlayPauseButton.vue'
 
 const playerStore = usePlayerStore()
+const emit = defineEmits(['playbackFinished'])
 
 const currentSong = computed(() => playerStore.currentSong)
 const isPlaying = computed(() => playerStore.isPlaying)
@@ -88,6 +100,26 @@ const isServerSelected = computed(() => playerStore.selectedServerId !== null)
 
 const volumeSlider = ref<HTMLInputElement | null>(null)
 const progressBar = ref<HTMLInputElement | null>(null)
+const currentPosition = ref(0)
+
+playerStore.$onAction(({ name, after }) => {
+  if (name === 'playbackFinished') {
+    after(() => {
+      currentPosition.value = 0
+      updateProgressValue()
+    })
+  }
+})
+
+const calculateCurrentPosition = () => {
+  if (currentSong.value) {
+    const startTime = new Date(currentSong.value.playback_start_time).getTime()
+    const now = new Date().getTime()
+    const elapsedTime = (now - startTime) / 1000 // Convert to seconds
+    return Math.min(elapsedTime, currentSong.value.duration)
+  }
+  return 0
+}
 
 const updateSliderValue = () => {
   if (volumeSlider.value) {
@@ -98,9 +130,63 @@ const updateSliderValue = () => {
 
 const updateProgressValue = () => {
   if (progressBar.value) {
-    const progress = (parseInt(progressBar.value.value) / parseInt(progressBar.value.max)) * 100
-    progressBar.value.style.setProperty('--value', `${progress}%`)
+    if (currentSong.value) {
+      progressBar.value.value = currentPosition.value.toString()
+      const progress = (currentPosition.value / (currentSong.value.duration / 1000)) * 100
+      progressBar.value.style.setProperty('--value', `${progress}%`)
+    } else {
+      progressBar.value.value = '0'
+      progressBar.value.style.setProperty('--value', '0%')
+    }
   }
+}
+
+const onProgressChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  currentPosition.value = parseInt(target.value)
+  updateProgressValue()
+}
+
+let progressInterval: number | null = null
+
+const startProgressInterval = () => {
+  if (progressInterval) clearInterval(progressInterval)
+  progressInterval = setInterval(() => {
+    currentPosition.value = calculateCurrentPosition()
+    updateProgressValue()
+  }, 1000)
+}
+
+watch(isPlaying, (newIsPlaying) => {
+  if (newIsPlaying) {
+    startProgressInterval()
+  } else {
+    if (progressInterval) clearInterval(progressInterval)
+    if (!currentSong.value) {
+      currentPosition.value = 0
+      updateProgressValue()
+    }
+  }
+})
+
+watch(currentSong, (newSong) => {
+  if (newSong) {
+    currentPosition.value = calculateCurrentPosition()
+    updateProgressValue()
+    if (isPlaying.value) {
+      startProgressInterval()
+    }
+  } else {
+    currentPosition.value = 0
+    updateProgressValue()
+    if (progressInterval) clearInterval(progressInterval)
+  }
+})
+
+const formatTime = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
 onMounted(() => {
@@ -116,6 +202,10 @@ onMounted(() => {
     progressBar.value.addEventListener('input', updateProgressValue)
     updateProgressValue() // Set initial value
   }
+
+  if (isPlaying.value) {
+    startProgressInterval()
+  }
 })
 
 onUnmounted(() => {
@@ -126,6 +216,8 @@ onUnmounted(() => {
   if (progressBar.value) {
     progressBar.value.removeEventListener('input', updateProgressValue)
   }
+
+  if (progressInterval) clearInterval(progressInterval)
 })
 </script>
 
@@ -194,7 +286,6 @@ onUnmounted(() => {
 }
 
 .album-cover {
-  width: 100%;
   height: 100%;
   border-radius: 999px;
   object-fit: cover;
@@ -220,6 +311,7 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   line-height: 1.2;
+  width: 100%;
 }
 
 .song-title,
@@ -233,13 +325,27 @@ onUnmounted(() => {
 }
 
 .song-title {
-  font-weight: bold;
-  font-size: 18px;
+  font-weight: 600;
+  font-size: 16px;
 }
 
 .song-artist {
   font-size: 12px;
   opacity: 0.7;
+  flex-grow: 1;
+}
+
+.artist-and-timer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timer {
+  color: white;
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .volume-controls {
@@ -259,6 +365,7 @@ onUnmounted(() => {
 }
 
 .progress-bar {
+  width: 100%;
   margin-top: 5px;
 }
 
@@ -336,7 +443,7 @@ onUnmounted(() => {
 }
 
 /* For WebKit browsers, create a filled effect */
-.info-section .progress-bar::before,
+.progress-bar::before,
 .volume-slider::before {
   content: '';
   position: absolute;
@@ -346,6 +453,7 @@ onUnmounted(() => {
   height: 100%;
   background-color: #4caf50;
   border-radius: 5px;
+  pointer-events: none;
 }
 
 @media (max-width: 900px) {

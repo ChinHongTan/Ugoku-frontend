@@ -27,7 +27,8 @@ const subscribeToActiveServers = () => {
   eventSource.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data)
-      if (data && data.guilds) {
+
+      if (data.guilds && data.guilds.length > 0) {
         activeServers.value = data.guilds.map((guild: any) => ({
           id: guild.id,
           name: guild.name,
@@ -43,12 +44,18 @@ const subscribeToActiveServers = () => {
               artist: currentSong.artist,
               album: currentSong.album,
               cover: currentSong.cover,
-              duration: currentSong.duration
+              duration: currentSong.duration,
+              playback_start_time: currentSong.playback_start_time
             })
           } else {
             playerStore.updateServerSong(guild.id, null)
           }
         })
+      } else {
+        // No active servers or song finished playing
+        console.log('No active servers')
+        activeServers.value = []
+        playerStore.clearAllServerSongs()
       }
     } catch (error) {
       console.error('Error parsing SSE data:', error)
@@ -186,7 +193,7 @@ onUnmounted(() => {
 .server-card {
   display: flex;
   align-items: center;
-  background-color: var(--color-background-mute);
+  background-color: white;
   padding: 10px;
   margin-bottom: 5px;
   border-radius: 50px;
@@ -195,11 +202,11 @@ onUnmounted(() => {
 }
 
 .server-card:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .server-card.selected {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .server-avatar {

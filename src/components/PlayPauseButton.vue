@@ -15,11 +15,7 @@ const playerStore = usePlayerStore()
 const isPlaying = computed(() => playerStore.isPlaying)
 
 const togglePlayPause = () => {
-  if (isPlaying.value) {
-    playerStore.pause()
-  } else {
-    playerStore.play()
-  }
+  playerStore.togglePlayPause()
 }
 
 defineProps({

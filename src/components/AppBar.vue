@@ -68,6 +68,7 @@ onMounted(async () => {
           Authorization: `Bearer ${token}`
         }
       })
+      response.data.user.avatar = `https://cdn.discordapp.com/avatars/${response.data.user.id}/${response.data.user.avatar}.png`
       userStore.setUser(response.data.user)
     } catch (error) {
       console.error('Error fetching user info:', error)

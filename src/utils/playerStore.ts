@@ -7,6 +7,7 @@ interface Song {
   album: string
   cover: string
   duration: number
+  playback_start_time: number
 }
 
 interface ServerSong {
@@ -46,26 +47,35 @@ export const usePlayerStore = defineStore('player', {
       this.currentSong = null
       this.isPlaying = false
     },
-    async play(guildId: string) {
-      await axios.post('/api/playback/toggle', {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          guildId: guildId
-        })
-      })
-      this.isPlaying = true
-    },
-    pause() {
-      this.isPlaying = false
+    async togglePlayPause() {
+      if (!this.selectedServerId) {
+        return
+      }
+      await axios.post(
+        'http://localhost:8000/api/playback/toggle',
+        { guildId: this.selectedServerId },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      )
+
+      this.isPlaying = !this.isPlaying
     },
     playbackFinished() {
       this.isPlaying = false
       if (this.selectedServerId) {
         this.updateServerSong(this.selectedServerId, null)
       }
+      this.$emit('playbackFinished')
+    },
+    clearAllServerSongs() {
+      this.serverSongs = []
+      this.currentSong = null
+      this.isPlaying = false
+      this.selectedServerId = null
     }
   }
 })
