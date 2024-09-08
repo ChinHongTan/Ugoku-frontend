@@ -70,13 +70,41 @@ export const usePlayerStore = defineStore('player', {
       if (this.selectedServerId) {
         this.updateServerSong(this.selectedServerId, null)
       }
-      this.$emit('playbackFinished')
     },
     clearAllServerSongs() {
       this.serverSongs = []
       this.currentSong = null
       this.isPlaying = false
       this.selectedServerId = null
+    },
+    async seekToPosition(position: number) {
+      if (!this.selectedServerId || !this.currentSong) {
+        return
+      }
+
+      try {
+        await axios.post(
+          'http://localhost:8000/api/playback/seek',
+          {
+            guildId: this.selectedServerId,
+            position: position
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        )
+
+        // Update the local state
+        if (this.currentSong) {
+          this.currentSong.playback_start_time = Date.now() - position * 1000
+        }
+      } catch (error) {
+        console.error('Error seeking to position:', error)
+        // Handle the error appropriately (e.g., show a notification to the user)
+      }
     },
     setVolume(volume: number) {
       this.volume = volume

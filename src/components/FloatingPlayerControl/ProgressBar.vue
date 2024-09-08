@@ -5,121 +5,154 @@
       class="progress-bar"
       :min="0"
       :max="duration"
-      :value="currentPosition"
+      :value="isDragging ? dragPosition : currentPosition"
       @input="onProgressChange"
-      :disabled="!isServerSelected || !currentSong"
-      ref="progressBarRef"
+      @mousedown="startDragging"
+      @mouseup="stopDragging"
+      @mouseleave="stopDragging"
+      :disabled="disabled"
+      :style="{ '--value': `${progressPercentage}%` }"
     />
-    <div class="time-display">{{ formatTime(currentPosition) }} / {{ formatTime(duration) }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { formatTime } from '@/utils/timeFormatter'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
-  currentSong: { duration: number } | null
   currentPosition: number
-  isServerSelected: boolean
+  duration: number
+  isPlaying: boolean
+  disabled: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'progressChange', position: number): void
+  (e: 'update:position', position: number): void
+  (e: 'seek', position: number): void
+  (e: 'dragStart'): void
+  (e: 'dragEnd'): void
 }>()
 
-const progressBarRef = ref<HTMLInputElement | null>(null)
+const isDragging = ref(false)
+const dragPosition = ref(props.currentPosition)
 
-const duration = computed(() => (props.currentSong ? props.currentSong.duration / 1000 : 0))
+const progressPercentage = computed(() => {
+  const position = isDragging.value ? dragPosition.value : props.currentPosition
+  return (position / props.duration) * 100
+})
 
-const onProgressChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  emit('progressChange', parseFloat(target.value))
+const startDragging = (event: MouseEvent) => {
+  isDragging.value = true
+  dragPosition.value = parseInt((event.target as HTMLInputElement).value)
+  emit('dragStart')
+  document.addEventListener('mouseup', stopDragging)
 }
 
-const updateProgressValue = () => {
-  if (progressBarRef.value && props.currentSong) {
-    const progress = (props.currentPosition / duration.value) * 100
-    progressBarRef.value.style.setProperty('--progress', `${progress}%`)
+const stopDragging = () => {
+  if (isDragging.value) {
+    isDragging.value = false
+    emit('seek', dragPosition.value)
+    emit('dragEnd')
+    document.removeEventListener('mouseup', stopDragging)
   }
 }
 
-watch(() => props.currentPosition, updateProgressValue)
-watch(() => props.currentSong, updateProgressValue)
+const onProgressChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  dragPosition.value = parseInt(target.value)
+  emit('update:position', dragPosition.value)
+}
 
-onMounted(() => {
-  updateProgressValue()
-})
-
-onUnmounted(() => {
-  // Clean up if necessary
-})
+watch(
+  () => props.currentPosition,
+  (newPosition) => {
+    if (!isDragging.value) {
+      dragPosition.value = newPosition
+    }
+  }
+)
 </script>
 
 <style scoped>
-.progress-bar-container {
+.progress-bar {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin-top: 5px;
 }
 
 .progress-bar {
-  width: 100%;
   -webkit-appearance: none;
   height: 4px;
-  border-radius: 2px;
+  border-radius: 5px;
   background: #d3d3d3;
   outline: none;
   transition: all 0.2s ease;
   cursor: pointer;
+  position: relative;
+}
+
+.progress-bar:hover,
+.progress-bar:active {
+  height: 5px;
+  background: white;
 }
 
 .progress-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #ffffff;
+  width: 0;
+  height: 0;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease;
 }
 
 .progress-bar::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #ffffff;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  width: 0;
+  height: 0;
+  background: transparent;
   border: none;
+  transition: all 0.2s ease;
 }
 
-.progress-bar::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, #4caf50 var(--progress), #d3d3d3 var(--progress));
+.progress-bar:hover::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: white;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-bar:hover::-webkit-slider-thumb,
+.progress-bar:active::-webkit-slider-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: white;
+  position: relative;
+  z-index: 2;
 }
 
 .progress-bar::-moz-range-progress {
   background-color: #4caf50;
+  height: 5px;
+  border-radius: 5px;
 }
 
-.progress-bar:hover::-webkit-slider-thumb,
-.progress-bar:active::-webkit-slider-thumb,
-.progress-bar:hover::-moz-range-thumb,
-.progress-bar:active::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
+.progress-bar:hover::-moz-range-progress {
+  height: 8px;
 }
 
-.time-display {
-  font-size: 12px;
-  color: #ffffff;
-  margin-top: 5px;
-}
-
-.progress-bar:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* For WebKit browsers, create a filled effect */
+.progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--value, 0%);
+  height: 100%;
+  background-color: #4caf50;
+  border-radius: 5px;
+  pointer-events: none;
 }
 </style>

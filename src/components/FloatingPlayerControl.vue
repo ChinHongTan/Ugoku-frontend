@@ -1,170 +1,153 @@
 <template>
   <div class="floating-player-control">
     <div class="player-content">
-      <div class="control-buttons">
-        <button
-          class="control-btn shuffle-btn"
-          :disabled="!isServerSelected"
-          @mousedown="onButtonPress"
-          @mouseup="onButtonRelease"
-          @mouseleave="onButtonRelease"
-        >
-          <span class="material-symbols-rounded">shuffle</span>
-        </button>
-        <button
-          class="control-btn previous-btn"
-          :disabled="!isServerSelected"
-          @mousedown="onButtonPress"
-          @mouseup="onButtonRelease"
-          @mouseleave="onButtonRelease"
-        >
-          <span class="material-symbols-rounded">skip_previous</span>
-        </button>
-        <PlayPauseButton :disabled="!isServerSelected" />
-        <button
-          class="control-btn next-btn"
-          :disabled="!isServerSelected"
-          @mousedown="onButtonPress"
-          @mouseup="onButtonRelease"
-          @mouseleave="onButtonRelease"
-        >
-          <span class="material-symbols-rounded">skip_next</span>
-        </button>
-        <button
-          class="control-btn repeat-btn"
-          :disabled="!isServerSelected"
-          @mousedown="onButtonPress"
-          @mouseup="onButtonRelease"
-          @mouseleave="onButtonRelease"
-        >
-          <span class="material-symbols-rounded"> repeat </span>
-        </button>
-      </div>
+      <ControlButtons :is-server-selected="isServerSelected" />
       <div class="info-section">
         <div class="album-cover-container" :class="{ rotating: isPlaying }">
           <img
-            v-if="currentSong && currentSong.cover"
+            v-if="currentSong?.cover"
             class="album-cover"
             :src="currentSong.cover"
-            width="40px"
-            height="40px"
+            width="40"
+            height="40"
+            alt="Album cover"
           />
           <DefaultAlbumCover v-else />
         </div>
         <div class="song-info">
-          <p class="song-title">
-            {{
-              isServerSelected
-                ? currentSong
-                  ? currentSong.title
-                  : 'Not playing'
-                : 'Select a server'
-            }}
-          </p>
+          <p class="song-title">{{ songTitle }}</p>
           <div class="artist-and-timer">
-            <p class="song-artist">
-              {{
-                isServerSelected
-                  ? currentSong
-                    ? currentSong.artist
-                    : '-'
-                  : 'to see player controls'
-              }}
-            </p>
+            <p class="song-artist">{{ songArtist }}</p>
             <div class="timer">
-              {{ formatTime(currentPosition) }} /
-              {{ formatTime(currentSong ? currentSong.duration / 1000 : 0) }}
+              {{ formatTime(currentPosition) }} / {{ formatTime(formattedDuration) }}
             </div>
           </div>
-          <input
-            type="range"
-            class="progress-bar"
-            :min="0"
-            :max="currentSong ? currentSong.duration / 1000 : 0"
-            :value="currentPosition"
-            @input="onProgressChange"
-            ref="progressBar"
+          <ProgressBar
+            :current-position="currentPosition"
+            :duration="formattedDuration"
+            :is-playing="isPlaying"
             :disabled="!isServerSelected || !currentSong"
+            @update:position="onProgressDrag"
+            @seek="onProgressRelease"
+            @dragStart="onDragStart"
+            @dragEnd="onDragEnd"
           />
         </div>
       </div>
-      <VolumeControl :isServerSelected="isServerSelected" />
+      <VolumeControl :is-server-selected="isServerSelected" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '@/utils/playerStore'
+import { formatTime } from '@/utils/timeUtils'
 import DefaultAlbumCover from '@/components/DefaultAlbumCover.vue'
-import PlayPauseButton from '@/components/PlayPauseButton.vue'
+import ControlButtons from '@/components/FloatingPlayerControl/ControlButtons.vue'
 import VolumeControl from '@/components/FloatingPlayerControl/VolumeControl.vue'
+import ProgressBar from '@/components/FloatingPlayerControl/ProgressBar.vue'
+
+interface Song {
+  title: string
+  artist: string
+  cover?: string
+  duration: number
+  playback_start_time: string
+}
 
 const playerStore = usePlayerStore()
 
-const currentSong = computed(() => playerStore.currentSong)
-const isPlaying = computed(() => playerStore.isPlaying)
-const isServerSelected = computed(() => playerStore.selectedServerId !== null)
+const currentSong = computed<Song | null>(() => playerStore.currentSong)
+const isPlaying = computed<boolean>(() => playerStore.isPlaying)
+const isServerSelected = computed<boolean>(() => playerStore.selectedServerId !== null)
 
-const progressBar = ref<HTMLInputElement | null>(null)
 const currentPosition = ref(0)
+const progressInterval = ref<number | null>(null)
+
+const isDragging = ref(false)
+let draggedPosition = ref(0)
+
+const formattedDuration = computed(() =>
+  currentSong.value ? currentSong.value.duration / 1000 : 0
+)
+
+const songTitle = computed(() =>
+  isServerSelected.value ? (currentSong.value?.title ?? 'Not playing') : 'Select a server'
+)
+
+const songArtist = computed(() =>
+  isServerSelected.value ? (currentSong.value?.artist ?? '-') : 'to see player controls'
+)
 
 playerStore.$onAction(({ name, after }) => {
   if (name === 'playbackFinished') {
     after(() => {
       currentPosition.value = 0
-      updateProgressValue()
     })
   }
 })
 
-const calculateCurrentPosition = () => {
-  if (currentSong.value) {
+const calculateCurrentPosition = (): number => {
+  if (currentSong.value && currentSong.value.playback_start_time) {
     const startTime = new Date(currentSong.value.playback_start_time).getTime()
-    const now = new Date().getTime()
+    const now = Date.now()
     const elapsedTime = (now - startTime) / 1000 // Convert to seconds
-    return Math.min(elapsedTime, currentSong.value.duration)
+    return Math.min(elapsedTime, currentSong.value.duration / 1000)
   }
   return 0
 }
 
-const updateProgressValue = () => {
-  if (progressBar.value) {
-    if (currentSong.value) {
-      progressBar.value.value = currentPosition.value.toString()
-      const progress = (currentPosition.value / (currentSong.value.duration / 1000)) * 100
-      progressBar.value.style.setProperty('--value', `${progress}%`)
-    } else {
-      progressBar.value.value = '0'
-      progressBar.value.style.setProperty('--value', '0%')
-    }
+const onProgressDrag = (position: number) => {
+  if (isDragging.value) {
+    draggedPosition.value = position
   }
 }
 
-const onProgressChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  currentPosition.value = parseInt(target.value)
-  updateProgressValue()
+const onProgressRelease = (position: number) => {
+  currentPosition.value = position
+  playerStore.seekToPosition(position)
+  if (isPlaying.value) {
+    startProgressInterval()
+  }
 }
 
-let progressInterval: number | null = null
+const onDragStart = () => {
+  isDragging.value = true
+  stopProgressInterval()
+}
+
+const onDragEnd = () => {
+  isDragging.value = false
+  currentPosition.value = draggedPosition.value
+  if (isPlaying.value) {
+    startProgressInterval()
+  }
+}
 
 const startProgressInterval = () => {
-  if (progressInterval) clearInterval(progressInterval)
-  progressInterval = setInterval(() => {
-    currentPosition.value = calculateCurrentPosition()
-    updateProgressValue()
-  }, 1000)
+  stopProgressInterval()
+  progressInterval.value = setInterval(() => {
+    if (!isDragging.value) {
+      currentPosition.value = calculateCurrentPosition()
+    }
+  }, 1000) // Update every second
+}
+
+const stopProgressInterval = () => {
+  if (progressInterval.value !== null) {
+    cancelAnimationFrame(progressInterval.value)
+    progressInterval.value = null
+  }
 }
 
 watch(isPlaying, (newIsPlaying) => {
   if (newIsPlaying) {
     startProgressInterval()
   } else {
-    if (progressInterval) clearInterval(progressInterval)
+    stopProgressInterval()
     if (!currentSong.value) {
       currentPosition.value = 0
-      updateProgressValue()
     }
   }
 })
@@ -172,73 +155,47 @@ watch(isPlaying, (newIsPlaying) => {
 watch(currentSong, (newSong) => {
   if (newSong) {
     currentPosition.value = calculateCurrentPosition()
-    updateProgressValue()
     if (isPlaying.value) {
       startProgressInterval()
     }
   } else {
     currentPosition.value = 0
-    updateProgressValue()
-    if (progressInterval) clearInterval(progressInterval)
+    stopProgressInterval()
   }
 })
 
-const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = Math.floor(seconds % 60)
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-}
-
 onMounted(() => {
-  progressBar.value = document.querySelector('.progress-bar')
-
-  if (progressBar.value) {
-    progressBar.value.addEventListener('input', updateProgressValue)
-    updateProgressValue() // Set initial value
-  }
-
   if (isPlaying.value) {
     startProgressInterval()
   }
 })
 
 onUnmounted(() => {
-  if (progressBar.value) {
-    progressBar.value.removeEventListener('input', updateProgressValue)
-  }
-
-  if (progressInterval) clearInterval(progressInterval)
+  stopProgressInterval()
 })
-
-const onButtonPress = (event: MouseEvent) => {
-  const icon = (event.currentTarget as HTMLElement).querySelector('.material-symbols-rounded')
-  if (icon) {
-    icon.classList.add('pressed')
-  }
-}
-
-const onButtonRelease = (event: MouseEvent) => {
-  const icon = (event.currentTarget as HTMLElement).querySelector('.material-symbols-rounded')
-  if (icon) {
-    icon.classList.remove('pressed')
-  }
-}
 </script>
 
 <style scoped>
 .floating-player-control {
+  --player-bg-color: rgba(0, 0, 0, 0.25);
+  --player-border-radius: 99px;
+  --player-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  --info-section-bg-color: rgba(0, 0, 0, 0.2);
+  --info-section-box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.25);
+  --text-color: white;
+
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 40px);
   max-width: 900px;
-  background-color: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px) saturate(150%);
-  -webkit-backdrop-filter: blur(15px) saturate(150%);
-  border-radius: 99px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  padding: 10px 10px;
+  background-color: var(--player-bg-color);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border-radius: var(--player-border-radius);
+  box-shadow: var(--player-box-shadow);
+  padding: 10px;
   z-index: 1000;
 }
 
@@ -247,59 +204,6 @@ const onButtonRelease = (event: MouseEvent) => {
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-}
-
-.control-buttons {
-  display: flex;
-  gap: 5px;
-  margin-left: 30px;
-}
-
-.control-btn {
-  background-color: transparent;
-  color: whitesmoke;
-  border: none;
-  padding: 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.control-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.material-symbols-rounded {
-  font-variation-settings:
-    'FILL' 0,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 24;
-  font-size: 30px;
-  transition:
-    filter 0.3s ease,
-    color 0.3s ease,
-    transform 0.1s ease;
-}
-
-.control-btn:not(:disabled):hover .material-symbols-rounded {
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
-  color: #ffffff;
-}
-
-.control-btn:not(:disabled) .material-symbols-rounded.pressed {
-  transform: scale(0.7);
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
-}
-
-.control-btn:not(:disabled) .material-symbols-rounded:not(.pressed) {
-  transition:
-    filter 0.3s ease,
-    color 0.3s ease,
-    transform 0.3s ease;
 }
 
 .album-cover-container {
@@ -323,7 +227,7 @@ const onButtonRelease = (event: MouseEvent) => {
 
 .album-cover {
   height: 100%;
-  border-radius: 999px;
+  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -337,10 +241,10 @@ const onButtonRelease = (event: MouseEvent) => {
 
 .info-section {
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.15);
-  border-radius: 99px;
+  background-color: var(--info-section-bg-color);
+  border-radius: var(--player-border-radius);
   padding: 5px 50px 5px 5px;
-  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--info-section-box-shadow);
 }
 
 .song-info {
@@ -357,7 +261,7 @@ const onButtonRelease = (event: MouseEvent) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: white;
+  color: var(--text-color);
 }
 
 .song-title {
@@ -378,92 +282,10 @@ const onButtonRelease = (event: MouseEvent) => {
 }
 
 .timer {
-  color: white;
+  color: var(--text-color);
   font-size: 12px;
   text-align: right;
   white-space: nowrap;
-}
-
-.progress-bar {
-  width: 100%;
-  margin-top: 5px;
-}
-
-.progress-bar {
-  -webkit-appearance: none;
-  height: 4px;
-  border-radius: 5px;
-  background: #d3d3d3;
-  outline: none;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  position: relative;
-}
-
-.progress-bar:hover,
-.progress-bar:active {
-  height: 5px;
-  background: white;
-}
-
-.progress-bar::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 0;
-  height: 0;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.progress-bar::-moz-range-thumb {
-  width: 0;
-  height: 0;
-  background: transparent;
-  border: none;
-  transition: all 0.2s ease;
-}
-
-.progress-bar:hover::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: white;
-  position: relative;
-  z-index: 2;
-}
-
-.progress-bar:hover::-webkit-slider-thumb,
-.progress-bar:active::-webkit-slider-thumb {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: white;
-  position: relative;
-  z-index: 2;
-}
-
-.progress-bar::-moz-range-progress {
-  background-color: #4caf50;
-  height: 5px;
-  border-radius: 5px;
-}
-
-.progress-bar:hover::-moz-range-progress {
-  height: 8px;
-}
-
-/* For WebKit browsers, create a filled effect */
-.progress-bar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: var(--value, 0%);
-  height: 100%;
-  background-color: #4caf50;
-  border-radius: 5px;
-  pointer-events: none;
 }
 
 @media (max-width: 900px) {
@@ -480,17 +302,6 @@ const onButtonRelease = (event: MouseEvent) => {
     order: 2;
     width: 100%;
     justify-content: space-between;
-  }
-
-  .control-btn {
-    font-size: 12px;
-    padding: 8px 12px;
-  }
-
-  .progress-bar {
-    order: 1;
-    width: 100%;
-    max-width: none;
   }
 
   .volume-controls {
