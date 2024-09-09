@@ -1,35 +1,27 @@
 <template>
-  <div class="control-buttons">
-    <button
-      class="control-btn shuffle-btn"
-      :disabled="!isServerSelected"
-      @mousedown="onButtonPress"
-      @mouseup="onButtonRelease"
-    >
-      <span class="material-symbols-rounded animated-icon">shuffle</span>
-    </button>
-    <button
-      class="control-btn previous-btn"
-      :disabled="!isServerSelected"
-      @mousedown="onButtonPress"
-      @mouseup="onButtonRelease"
-    >
-      <span class="material-symbols-rounded animated-icon">skip_previous</span>
-    </button>
-    <PlayPauseButton :disabled="!isServerSelected" />
-    <SkipButton :disabled="!isServerSelected" />
-    <LoopButton :disabled="!isServerSelected" />
-  </div>
+  <button
+    class="control-btn skip-btn"
+    :disabled="disabled"
+    @click="skipSong"
+    @mousedown="onButtonPress"
+    @mouseup="onButtonRelease"
+  >
+    <span class="material-symbols-rounded">skip_next</span>
+  </button>
 </template>
 
 <script setup lang="ts">
-import PlayPauseButton from '@/components/FloatingPlayerControl/PlayPauseButton.vue'
-import LoopButton from '@/components/FloatingPlayerControl/LoopButton.vue'
-import SkipButton from '@/components/FloatingPlayerControl/SkipButton.vue'
+import { usePlayerStore } from '@/store/playerStore'
 
-defineProps<{
-  isServerSelected: boolean
+const props = defineProps<{
+  disabled: boolean
 }>()
+
+const playerStore = usePlayerStore()
+
+const skipSong = () => {
+  playerStore.skipSong()
+}
 
 const onButtonPress = (event: MouseEvent) => {
   const icon = (event.currentTarget as HTMLElement).querySelector('.material-symbols-rounded')
@@ -47,11 +39,6 @@ const onButtonRelease = (event: MouseEvent) => {
 </script>
 
 <style scoped>
-.control-buttons {
-  display: flex;
-  margin-left: 30px;
-}
-
 .control-btn {
   background-color: transparent;
   color: whitesmoke;
@@ -76,11 +63,13 @@ const onButtonRelease = (event: MouseEvent) => {
     'opsz' 24;
   font-size: 30px;
   transition: all 0.3s ease;
+  opacity: 0.7;
 }
 
-.control-btn:not(:disabled):hover .material-symbols-rounded {
+.control-btn:not(:disabled):hover .material-symbols-rounded,
+.control-btn .material-symbols-rounded.active {
+  opacity: 1;
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
-  color: #ffffff;
 }
 
 .control-btn:not(:disabled) .material-symbols-rounded.pressed {

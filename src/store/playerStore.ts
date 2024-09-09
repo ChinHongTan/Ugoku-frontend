@@ -173,6 +173,14 @@ export const usePlayerStore = defineStore('player', {
       const newMode = modes[(currentIndex + 1) % modes.length] as 'noLoop' | 'loopAll' | 'loopOne'
       await this.setLoopMode(newMode)
     },
+    async skipSong() {
+      if (!this.selectedServerId) return
+      try {
+        await api.post('/playback/skip', { guildId: this.selectedServerId })
+      } catch (error) {
+        console.error('Error skipping song:', error)
+      }
+    },
     setVolume(volume: number) {
       this.volume = volume
       // if (this.selectedServerId) {
