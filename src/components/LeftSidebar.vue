@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted } from 'vue'
-import { useSidebarStore } from '@/utils/sidebarStore'
-import { usePlayerStore } from '@/utils/playerStore'
+import { useSidebarStore } from '@/store/sidebarStore'
+import { usePlayerStore } from '@/store/playerStore'
 import { subscribeToActiveServers } from '@/utils/serverSubscription'
 
 const sidebarStore = useSidebarStore()

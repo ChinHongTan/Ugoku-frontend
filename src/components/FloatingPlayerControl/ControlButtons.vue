@@ -25,19 +25,13 @@
     >
       <span class="material-symbols-rounded animated-icon">skip_next</span>
     </button>
-    <button
-      class="control-btn repeat-btn"
-      :disabled="!isServerSelected"
-      @mousedown="onButtonPress"
-      @mouseup="onButtonRelease"
-    >
-      <span class="material-symbols-rounded animated-icon">repeat</span>
-    </button>
+    <LoopButton :disabled="!isServerSelected" />
   </div>
 </template>
 
 <script setup lang="ts">
-import PlayPauseButton from '@/components/PlayPauseButton.vue'
+import PlayPauseButton from '@/components/FloatingPlayerControl/PlayPauseButton.vue'
+import LoopButton from '@/components/FloatingPlayerControl/LoopButton.vue'
 
 defineProps<{
   isServerSelected: boolean

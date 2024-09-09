@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { usePlayerStore } from '@/utils/playerStore'
+import { usePlayerStore } from '@/store/playerStore'
 
 const props = defineProps<{
   isServerSelected: boolean

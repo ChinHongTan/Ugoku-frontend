@@ -1,5 +1,5 @@
 import { EventSourcePolyfill } from 'event-source-polyfill'
-import { usePlayerStore } from './playerStore'
+import { usePlayerStore } from '../store/playerStore'
 
 export function subscribeToActiveServers() {
   const playerStore = usePlayerStore()

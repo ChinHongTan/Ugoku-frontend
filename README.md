@@ -49,3 +49,20 @@ npm run lint
 - [ ] Make the player (play/pause, skip, loop, seek) work with discord bot
 - [ ] UI Improvements
 - [ ] Have fun with my crazy ideas
+- Refactor the codebase
+- [ ] FloatingPlayerControl
+  - [ ] AlbumCover.vue
+  - [ ] ControlButtons.vue
+  - [ ] DefaultAlbumCover.vue
+  - [ ] FloatingPlayerControl.vue
+  - [ ] PlayPauseButton.vue
+  - [ ] ProgressBar.vue
+  - [ ] QueueToggleButton.vue
+  - [ ] SongInfo.vue
+  - [ ] VolumeControl.vue
+  - [ ] LoopButton.vue
+- [ ] RightSidebar
+  - [ ] History.vue
+  - [ ] Queue.vue
+- [ ] LeftSidebar
+- [ ] Add more tests

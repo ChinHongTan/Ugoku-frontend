@@ -27,9 +27,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { usePlayerStore } from '@/utils/playerStore'
-import Queue from '@/components/Queue.vue'
-import History from '@/components/History.vue'
+import { usePlayerStore } from '@/store/playerStore'
+import Queue from '@/components/RightSideBar/Queue.vue'
+import History from '@/components/RightSideBar/History.vue'
 
 const playerStore = usePlayerStore()
 

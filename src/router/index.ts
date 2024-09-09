@@ -4,7 +4,7 @@ import WelcomePage from '../views/WelcomePage.vue'
 import AllPlaylists from '../components/AllPlaylists.vue'
 import AuthCallbackHandler from '../components/AuthCallbackHandler.vue'
 
-import { useUserStore } from '@/utils/userStore'
+import { useUserStore } from '@/store/userStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

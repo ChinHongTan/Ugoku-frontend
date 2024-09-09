@@ -5,12 +5,6 @@ import {
   faXmark,
   faRightFromBracket,
   faMagnifyingGlass,
-  faPlay,
-  faBackward,
-  faForward,
-  faRepeat,
-  faShuffle,
-  faCarrot,
   faCircle,
   faChevronRight
 } from '@fortawesome/free-solid-svg-icons'
@@ -20,12 +14,6 @@ library.add(
   faXmark,
   faRightFromBracket,
   faMagnifyingGlass,
-  faPlay,
-  faBackward,
-  faForward,
-  faRepeat,
-  faShuffle,
-  faCarrot,
   faCircle,
   faChevronRight
 )

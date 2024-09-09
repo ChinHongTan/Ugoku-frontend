@@ -2,8 +2,8 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/utils/userStore'
-import { useSidebarStore } from '@/utils/sidebarStore'
+import { useUserStore } from '@/store/userStore'
+import { useSidebarStore } from '@/store/sidebarStore'
 
 interface User {
   avatar: string

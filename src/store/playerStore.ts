@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import type { AxiosInstance } from 'axios'
 
 interface Song {
   title: string
@@ -20,8 +21,35 @@ interface ServerSong {
   history: Song[]
 }
 
+interface State {
+  isPlaying: boolean
+  currentSong: Song | null
+  serverSongs: ServerSong[]
+  selectedServerId: string | null
+  volume: number
+  isQueueOpen: boolean
+  queue: Song[]
+  history: Song[]
+  loopMode: LoopMode
+}
+
+enum LoopMode {
+  NoLoop = 'noLoop',
+  LoopAll = 'loopAll',
+  LoopOne = 'loopOne'
+}
+
+// Base axios instance
+const api: AxiosInstance = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  }
+})
+
 export const usePlayerStore = defineStore('player', {
-  state: () => ({
+  state: (): State => ({
     isPlaying: false,
     currentSong: null as Song | null,
     serverSongs: [] as ServerSong[],
@@ -29,7 +57,8 @@ export const usePlayerStore = defineStore('player', {
     volume: 100,
     isQueueOpen: false,
     queue: [] as Song[],
-    history: [] as Song[]
+    history: [] as Song[],
+    loopMode: LoopMode.NoLoop
   }),
   actions: {
     updateServerSong(
@@ -73,22 +102,14 @@ export const usePlayerStore = defineStore('player', {
       this.currentSong = null
       this.isPlaying = false
     },
-    async togglePlayPause() {
-      if (!this.selectedServerId) {
-        return
+    async togglePlayPause(): Promise<void> {
+      if (!this.selectedServerId) return
+      try {
+        await api.post('/playback/toggle', { guildId: this.selectedServerId })
+        this.isPlaying = !this.isPlaying
+      } catch (error) {
+        console.error('Error toggling play/pause:', error)
       }
-      await axios.post(
-        'http://localhost:8000/api/playback/toggle',
-        { guildId: this.selectedServerId },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      )
-
-      this.isPlaying = !this.isPlaying
     },
     playbackFinished() {
       this.isPlaying = false
@@ -118,19 +139,10 @@ export const usePlayerStore = defineStore('player', {
       }
 
       try {
-        await axios.post(
-          'http://localhost:8000/api/playback/seek',
-          {
-            guildId: this.selectedServerId,
-            position: position
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        )
+        await api.post('/playback/seek', {
+          guildId: this.selectedServerId,
+          position: position
+        })
 
         // Update the local state
         if (this.currentSong) {
@@ -143,6 +155,23 @@ export const usePlayerStore = defineStore('player', {
     },
     toggleQueue() {
       this.isQueueOpen = !this.isQueueOpen
+    },
+    async setLoopMode(mode: 'noLoop' | 'loopAll' | 'loopOne') {
+      try {
+        await api.post('/playback/loop', {
+          guildId: this.selectedServerId,
+          mode: mode
+        })
+        this.loopMode = mode
+      } catch (error) {
+        console.error('Error setting loop mode:', error)
+      }
+    },
+    async toggleLoopMode() {
+      const modes = ['noLoop', 'loopAll', 'loopOne']
+      const currentIndex = modes.indexOf(this.loopMode)
+      const newMode = modes[(currentIndex + 1) % modes.length] as 'noLoop' | 'loopAll' | 'loopOne'
+      await this.setLoopMode(newMode)
     },
     setVolume(volume: number) {
       this.volume = volume

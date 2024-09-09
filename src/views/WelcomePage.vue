@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/utils/userStore'
+import { useUserStore } from '@/store/userStore'
 
 const router = useRouter()
 const userStore = useUserStore()

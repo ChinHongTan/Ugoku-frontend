@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
-import { useUserStore } from './utils/userStore'
-import { useSidebarStore } from './utils/sidebarStore'
+import { useUserStore } from './store/userStore'
+import { useSidebarStore } from './store/sidebarStore'
 import AppBar from './components/AppBar.vue'
 import LeftSidebar from './components/LeftSidebar.vue'
-import RightSidebar from './components/RightSidebar.vue'
-import FloatingPlayerControl from './components/FloatingPlayerControl.vue'
+import RightSidebar from './components/RightSideBar/RightSidebar.vue'
+import FloatingPlayerControl from './components/FloatingPlayerControl/FloatingPlayerControl.vue'
 
 const userStore = useUserStore()
 const isLoggedIn = computed(() => !!userStore.user)
