@@ -1,32 +1,47 @@
 <template>
   <div class="right-sidebar-container">
-    <button v-if="isCollapsed" @click="toggleSidebar" class="toggle-btn">
-      <font-awesome-icon :icon="['fas', 'bars']" transform="grow-10" />
-    </button>
-    <div class="right-sidebar" :class="{ expanded: !isCollapsed }">
+    <div class="right-sidebar" :class="{ expanded: isOpen }">
       <button @click="toggleSidebar" class="close-btn">
         <font-awesome-icon :icon="['fas', 'xmark']" />
       </button>
       <div class="sidebar-content">
-        <h2>Queued Songs</h2>
-        <ul>
-          <li>Song 1</li>
-          <li>Song 2</li>
-          <li>Song 3</li>
-        </ul>
+        <div class="tabs">
+          <div class="tab-highlight" :class="{ 'move-right': activeTab === 'history' }"></div>
+          <button @click="setActiveTab('queue')" :class="{ active: activeTab === 'queue' }">
+            Queue
+          </button>
+          <button @click="setActiveTab('history')" :class="{ active: activeTab === 'history' }">
+            History
+          </button>
+        </div>
+        <div class="tab-content">
+          <transition name="fade" mode="out-in">
+            <Queue v-if="activeTab === 'queue'" />
+            <History v-else-if="activeTab === 'history'" />
+          </transition>
+        </div>
       </div>
     </div>
   </div>
-  transform="grow-6"
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { usePlayerStore } from '@/utils/playerStore'
+import Queue from '@/components/Queue.vue'
+import History from '@/components/History.vue'
 
-const isCollapsed = ref(true)
+const playerStore = usePlayerStore()
+
+const isOpen = computed(() => playerStore.isQueueOpen)
+const activeTab = ref('queue')
 
 const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
+  playerStore.toggleQueue()
+}
+
+const setActiveTab = (tab: 'queue' | 'history') => {
+  activeTab.value = tab
 }
 </script>
 
@@ -36,45 +51,22 @@ const toggleSidebar = () => {
   top: 60px; /* AppBar height */
   right: 0;
   height: calc(100vh - 60px); /* Subtract AppBar height */
+  z-index: 1000;
 }
 
 .right-sidebar {
   width: 300px;
-  background-color: #f0f0f0;
+  background-color: #ffffff;
   height: 100%;
   transform: translateX(100%);
   transition: transform 0.3s ease-in-out;
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .right-sidebar.expanded {
   transform: translateX(0);
-}
-
-.toggle-btn {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.3s ease;
-}
-
-.toggle-btn:hover {
-  background-color: #45a049;
-}
-
-.toggle-btn .fa-icon {
-  font-size: 40px;
 }
 
 .close-btn {
@@ -85,10 +77,93 @@ const toggleSidebar = () => {
   border: none;
   font-size: 24px;
   cursor: pointer;
+  color: #333;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #ff5252;
 }
 
 .sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 20px;
-  padding-top: 40px; /* Add space for the close button */
+  padding-top: 50px; /* Add space for the close button */
+}
+
+.tabs {
+  display: flex;
+  position: relative;
+  height: 40px;
+  margin-bottom: 20px;
+  background-color: #f5f5f5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.tab-highlight {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  background-color: #4caf50;
+  border-radius: 20px;
+  transition: transform 0.3s ease;
+}
+
+.tab-highlight.move-right {
+  transform: translateX(100%);
+}
+
+.tabs button {
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  transition: color 0.3s ease;
+  color: #666;
+  z-index: 1;
+}
+
+.tabs button.active {
+  color: white;
+}
+
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar */
+.tab-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Transition for tab content */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

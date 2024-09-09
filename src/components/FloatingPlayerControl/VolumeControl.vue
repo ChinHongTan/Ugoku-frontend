@@ -1,6 +1,12 @@
 <template>
   <div class="volume-controls" ref="volumeControlsRef">
-    <button class="volume-button" @click="toggleMute" @mouseenter="showVolumeSlider">
+    <button
+      class="volume-button"
+      @click="toggleMute"
+      @mouseenter="showVolumeSlider"
+      @mousedown="onButtonPress"
+      @mouseup="onButtonRelease"
+    >
       <span class="material-symbols-rounded">{{ volumeIcon }}</span>
     </button>
     <Transition name="slide-fade">
@@ -92,6 +98,20 @@ const updateSliderValue = () => {
   }
 }
 
+const onButtonPress = (event: MouseEvent) => {
+  const icon = (event.currentTarget as HTMLElement).querySelector('.material-symbols-rounded')
+  if (icon) {
+    icon.classList.add('pressed')
+  }
+}
+
+const onButtonRelease = (event: MouseEvent) => {
+  const icon = (event.currentTarget as HTMLElement).querySelector('.material-symbols-rounded')
+  if (icon) {
+    icon.classList.remove('pressed')
+  }
+}
+
 onMounted(() => {
   volumeSlider.value = document.querySelector('.volume-slider')
   volume.value = playerStore.volume
@@ -138,12 +158,32 @@ watch(volume, (newVolume) => {
   cursor: pointer;
   padding: 7px;
   border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .volume-button:hover .material-symbols-rounded,
 .volume-controls:hover .volume-button .material-symbols-rounded {
   color: rgba(255, 255, 255, 0.8);
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+}
+
+.volume-button:hover .material-symbols-rounded {
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+  color: #ffffff;
+}
+
+.volume-button .material-symbols-rounded.pressed {
+  transform: scale(0.7);
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.9));
+}
+
+.volume-button .material-symbols-rounded:not(.pressed) {
+  transition:
+    filter 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
 }
 
 .material-symbols-rounded {

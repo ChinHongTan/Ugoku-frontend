@@ -34,7 +34,10 @@
           />
         </div>
       </div>
-      <VolumeControl :is-server-selected="isServerSelected" />
+      <div class="right-controls">
+        <QueueToggleButton />
+        <VolumeControl :is-server-selected="isServerSelected" />
+      </div>
     </div>
   </div>
 </template>
@@ -47,6 +50,7 @@ import DefaultAlbumCover from '@/components/DefaultAlbumCover.vue'
 import ControlButtons from '@/components/FloatingPlayerControl/ControlButtons.vue'
 import VolumeControl from '@/components/FloatingPlayerControl/VolumeControl.vue'
 import ProgressBar from '@/components/FloatingPlayerControl/ProgressBar.vue'
+import QueueToggleButton from '@/components/FloatingPlayerControl/QueueToggleButton.vue'
 
 interface Song {
   title: string
@@ -288,6 +292,11 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
+.right-controls {
+  display: flex;
+  align-items: center;
+}
+
 @media (max-width: 900px) {
   .floating-player-control {
     padding: 10px;
@@ -314,6 +323,12 @@ onUnmounted(() => {
     order: 1;
     width: 100%;
     max-width: none;
+  }
+
+  .right-controls {
+    order: 3;
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 </style>

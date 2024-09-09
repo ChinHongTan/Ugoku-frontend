@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useSidebarStore } from '@/utils/sidebarStore'
 import { usePlayerStore } from '@/utils/playerStore'
-import { EventSourcePolyfill } from 'event-source-polyfill'
+import { subscribeToActiveServers } from '@/utils/serverSubscription'
 
 const sidebarStore = useSidebarStore()
 const playerStore = usePlayerStore()
@@ -17,70 +17,40 @@ const toggleActiveNow = () => {
   isActiveNowOpen.value = !isActiveNowOpen.value
 }
 
-let eventSource: EventSourcePolyfill | null = null
-
-const subscribeToActiveServers = () => {
-  if (eventSource) return // Prevent multiple connections
-
-  eventSource = new EventSourcePolyfill('http://localhost:8000/play/stream')
-
-  eventSource.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data)
-
-      if (data.guilds && data.guilds.length > 0) {
-        activeServers.value = data.guilds.map((guild: any) => ({
-          id: guild.id,
-          name: guild.name,
-          icon: guild.icon || 'path/to/default/icon.png'
-        }))
-
-        // Update the server songs in the player store
-        data.guilds.forEach((guild: any) => {
-          const currentSong = guild.currentSong
-          if (currentSong) {
-            playerStore.updateServerSong(guild.id, {
-              title: currentSong.title,
-              artist: currentSong.artist,
-              album: currentSong.album,
-              cover: currentSong.cover,
-              duration: currentSong.duration,
-              playback_start_time: currentSong.playback_start_time
-            })
-          } else {
-            playerStore.updateServerSong(guild.id, null)
-          }
-        })
-      } else {
-        // No active servers or song finished playing
-        console.log('No active servers')
-        activeServers.value = []
-        playerStore.clearAllServerSongs()
-      }
-    } catch (error) {
-      console.error('Error parsing SSE data:', error)
-    }
-  }
-
-  eventSource.onerror = (error) => {
-    console.error('SSE error:', error)
-    eventSource?.close()
-    eventSource = null
-  }
-}
-
 const handleServerClick = (serverId: string) => {
   selectedServerId.value = serverId
   playerStore.setSelectedServer(serverId)
 }
 
+let unsubscribe: (() => void) | null = null
+
 onMounted(() => {
-  subscribeToActiveServers()
+  unsubscribe = subscribeToActiveServers()
+
+  // Update activeServers when serverSongs change
+  playerStore.$subscribe((mutation, state) => {
+    if (
+      mutation.type === 'direct' &&
+      mutation.storeId === 'player' &&
+      Array.isArray(state.serverSongs)
+    ) {
+      activeServers.value = state.serverSongs.map((server) => ({
+        id: server.serverId,
+        name: server.name || 'Unknown Server',
+        icon: server.icon || 'path/to/default/icon.png'
+      }))
+    }
+  })
+
+  console.log('activeServers', activeServers.value)
+
   playerStore.clearSelectedServer() // Clear any previously selected server
 })
 
 onUnmounted(() => {
-  eventSource?.close()
+  if (unsubscribe) {
+    unsubscribe()
+  }
 })
 </script>
 

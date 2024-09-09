@@ -7,12 +7,17 @@ interface Song {
   album: string
   cover: string
   duration: number
-  playback_start_time: number
+  playback_start_time?: number
+  url?: string
 }
 
 interface ServerSong {
   serverId: string
+  name: string
+  icon: string | null
   song: Song | null
+  queue: Song[]
+  history: Song[]
 }
 
 export const usePlayerStore = defineStore('player', {
@@ -21,27 +26,47 @@ export const usePlayerStore = defineStore('player', {
     currentSong: null as Song | null,
     serverSongs: [] as ServerSong[],
     selectedServerId: null as string | null,
-    volume: 100
+    volume: 100,
+    isQueueOpen: false,
+    queue: [] as Song[],
+    history: [] as Song[]
   }),
   actions: {
-    updateServerSong(serverId: string, song: Song | null) {
+    updateServerSong(
+      serverId: string,
+      song: Song | null,
+      queue: Song[],
+      history: Song[],
+      name: string,
+      icon: string | null
+    ) {
       const index = this.serverSongs.findIndex((ss) => ss.serverId === serverId)
       if (index !== -1) {
-        this.serverSongs[index].song = song
+        this.serverSongs[index] = { serverId, song, queue, history, name, icon }
       } else {
-        this.serverSongs.push({ serverId, song })
+        this.serverSongs.push({ serverId, song, queue, history, name, icon })
       }
 
       if (serverId === this.selectedServerId) {
         this.currentSong = song
+        this.queue = queue
+        this.history = history
         this.isPlaying = !!song
       }
     },
     setSelectedServer(serverId: string) {
       this.selectedServerId = serverId
       const serverSong = this.serverSongs.find((ss) => ss.serverId === serverId)
-      this.currentSong = serverSong ? serverSong.song : null
-      this.isPlaying = !!this.currentSong
+      if (serverSong) {
+        this.currentSong = serverSong.song
+        this.queue = serverSong.queue
+        this.history = serverSong.history
+        this.isPlaying = !!serverSong.song
+      } else {
+        this.currentSong = null
+        this.queue = []
+        this.isPlaying = false
+      }
     },
     clearSelectedServer() {
       this.selectedServerId = null
@@ -68,7 +93,17 @@ export const usePlayerStore = defineStore('player', {
     playbackFinished() {
       this.isPlaying = false
       if (this.selectedServerId) {
-        this.updateServerSong(this.selectedServerId, null)
+        const serverSong = this.serverSongs.find((ss) => ss.serverId === this.selectedServerId)
+        if (serverSong) {
+          this.updateServerSong(
+            this.selectedServerId,
+            null,
+            serverSong.queue,
+            serverSong.history,
+            serverSong.name,
+            serverSong.icon
+          )
+        }
       }
     },
     clearAllServerSongs() {
@@ -105,6 +140,9 @@ export const usePlayerStore = defineStore('player', {
         console.error('Error seeking to position:', error)
         // Handle the error appropriately (e.g., show a notification to the user)
       }
+    },
+    toggleQueue() {
+      this.isQueueOpen = !this.isQueueOpen
     },
     setVolume(volume: number) {
       this.volume = volume
