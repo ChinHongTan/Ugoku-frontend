@@ -51,14 +51,14 @@ npm run lint
 - [ ] Have fun with my crazy ideas
 - Refactor the codebase
 - [ ] FloatingPlayerControl
-  - [ ] AlbumCover.vue
-  - [ ] ControlButtons.vue
-  - [ ] DefaultAlbumCover.vue
+  - [x] AlbumCover.vue
+  - [x] ControlButtons.vue
+  - [x] DefaultAlbumCover.vue
   - [ ] FloatingPlayerControl.vue
-  - [ ] PlayPauseButton.vue
-  - [ ] ProgressBar.vue
-  - [ ] QueueToggleButton.vue
-  - [ ] SongInfo.vue
+  - [x] PlayPauseButton.vue
+  - [x] ProgressBar.vue
+  - [x] QueueToggleButton.vue
+  - [x] SongInfo.vue
   - [ ] VolumeControl.vue
   - [ ] LoopButton.vue
 - [ ] RightSidebar
