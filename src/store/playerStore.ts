@@ -31,6 +31,7 @@ interface State {
   queue: Song[]
   history: Song[]
   loopMode: LoopMode
+  isShuffleActive: boolean
 }
 
 enum LoopMode {
@@ -58,7 +59,8 @@ export const usePlayerStore = defineStore('player', {
     isQueueOpen: false,
     queue: [] as Song[],
     history: [] as Song[],
-    loopMode: LoopMode.NoLoop
+    loopMode: LoopMode.NoLoop,
+    isShuffleActive: false
   }),
   actions: {
     updateServerSong(
@@ -156,7 +158,7 @@ export const usePlayerStore = defineStore('player', {
     toggleQueue() {
       this.isQueueOpen = !this.isQueueOpen
     },
-    async setLoopMode(mode: 'noLoop' | 'loopAll' | 'loopOne') {
+    async setLoopMode(mode: LoopMode) {
       try {
         await api.post('/playback/loop', {
           guildId: this.selectedServerId,
@@ -170,7 +172,7 @@ export const usePlayerStore = defineStore('player', {
     async toggleLoopMode() {
       const modes = ['noLoop', 'loopAll', 'loopOne']
       const currentIndex = modes.indexOf(this.loopMode)
-      const newMode = modes[(currentIndex + 1) % modes.length] as 'noLoop' | 'loopAll' | 'loopOne'
+      const newMode = modes[(currentIndex + 1) % modes.length] as LoopMode
       await this.setLoopMode(newMode)
     },
     async skipSong() {
@@ -181,20 +183,33 @@ export const usePlayerStore = defineStore('player', {
         console.error('Error skipping song:', error)
       }
     },
-    setVolume(volume: number) {
-      this.volume = volume
-      // if (this.selectedServerId) {
-      //   axios.post(
-      //     'http://localhost:8000/api/playback/volume',
-      //     { guildId: this.selectedServerId, volume },
-      //     {
-      //       headers: {
-      //         'Content-Type': 'application/json',
-      //         Authorization: `Bearer ${localStorage.getItem('token')}`
-      //       }
-      //     }
-      //   )
-      // }
+    async toggleShuffle(isActive: boolean) {
+      if (!this.selectedServerId) return
+      try {
+        await api.post('/playback/shuffle', { guildId: this.selectedServerId, isActive })
+        this.isShuffleActive = isActive
+      } catch (error) {
+        console.error('Error shuffling queue:', error)
+      }
+    },
+    async playPrevious() {
+      if (!this.selectedServerId) return
+      try {
+        await api.post('/playback/previous', {
+          guildId: this.selectedServerId
+        })
+      } catch (error) {
+        console.error('Error playing previous song:', error)
+      }
+    },
+    async setVolume(volume: number) {
+      if (!this.selectedServerId) return
+      try {
+        await api.post('/playback/volume', { guildId: this.selectedServerId, volume })
+        this.volume = volume
+      } catch (error) {
+        console.error('Error shuffling queue:', error)
+      }
     }
   }
 })

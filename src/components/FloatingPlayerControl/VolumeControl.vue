@@ -21,10 +21,14 @@
           class="volume-slider"
           min="0"
           max="100"
-          :value="volume"
+          :value="isDragging ? dragVolume : volume"
           @input="onVolumeChange"
+          @mousedown="startDragging"
+          @mouseup="stopDragging"
+          @mouseleave="stopDragging"
           ref="volumeSlider"
           :disabled="!isServerSelected"
+          :style="{ '--value': `${volume}%` }"
         />
       </div>
     </Transition>
@@ -44,6 +48,8 @@ const volumeSlider = ref<HTMLInputElement | null>(null)
 const volume = ref(100)
 const lastNonZeroVolume = ref(100)
 const isVolumeSliderVisible = ref(false)
+const isDragging = ref(false)
+const dragVolume = ref(100)
 
 const playerStore = usePlayerStore()
 
@@ -82,19 +88,40 @@ const toggleMute = () => {
   updateSliderValue()
 }
 
+const startDragging = (event: MouseEvent) => {
+  isDragging.value = true
+  dragVolume.value = parseInt((event.target as HTMLInputElement).value)
+  document.addEventListener('mouseup', stopDragging)
+}
+
+const stopDragging = () => {
+  if (isDragging.value) {
+    isDragging.value = false
+    volume.value = dragVolume.value
+    playerStore.setVolume(volume.value)
+    updateSliderValue()
+    document.removeEventListener('mouseup', stopDragging)
+  }
+}
+
 const onVolumeChange = (event: Event) => {
   const target = event.target as HTMLInputElement
-  volume.value = parseInt(target.value)
-  if (volume.value > 0) {
-    lastNonZeroVolume.value = volume.value
+  dragVolume.value = parseInt(target.value)
+  if (!isDragging.value) {
+    volume.value = dragVolume.value
   }
-  playerStore.setVolume(volume.value)
+  if (dragVolume.value > 0) {
+    lastNonZeroVolume.value = dragVolume.value
+  }
   updateSliderValue()
 }
 
 const updateSliderValue = () => {
   if (volumeSlider.value) {
-    volumeSlider.value.style.setProperty('--value', `${volume.value}%`)
+    volumeSlider.value.style.setProperty(
+      '--value',
+      `${isDragging.value ? dragVolume.value : volume.value}%`
+    )
   }
 }
 
@@ -133,8 +160,10 @@ onMounted(() => {
 watch(
   () => playerStore.volume,
   (newVolume) => {
-    volume.value = newVolume
-    updateSliderValue()
+    if (!isDragging.value) {
+      volume.value = newVolume
+      updateSliderValue()
+    }
   }
 )
 

@@ -1,21 +1,7 @@
 <template>
   <div class="control-buttons">
-    <button
-      class="control-btn shuffle-btn"
-      :disabled="!isServerSelected"
-      @mousedown="onButtonPress"
-      @mouseup="onButtonRelease"
-    >
-      <span class="material-symbols-rounded animated-icon">shuffle</span>
-    </button>
-    <button
-      class="control-btn previous-btn"
-      :disabled="!isServerSelected"
-      @mousedown="onButtonPress"
-      @mouseup="onButtonRelease"
-    >
-      <span class="material-symbols-rounded animated-icon">skip_previous</span>
-    </button>
+    <ShuffleButton :disabled="!isServerSelected" />
+    <PreviousButton :disabled="!isServerSelected" />
     <PlayPauseButton :disabled="!isServerSelected" />
     <SkipButton :disabled="!isServerSelected" />
     <LoopButton :disabled="!isServerSelected" />
@@ -26,24 +12,12 @@
 import PlayPauseButton from '@/components/FloatingPlayerControl/PlayPauseButton.vue'
 import LoopButton from '@/components/FloatingPlayerControl/LoopButton.vue'
 import SkipButton from '@/components/FloatingPlayerControl/SkipButton.vue'
+import ShuffleButton from '@/components/FloatingPlayerControl/ShuffleButton.vue'
+import PreviousButton from './PreviousButton.vue'
 
 defineProps<{
   isServerSelected: boolean
 }>()
-
-const onButtonPress = (event: MouseEvent) => {
-  const icon = (event.currentTarget as HTMLElement).querySelector('.material-symbols-rounded')
-  if (icon) {
-    icon.classList.add('pressed')
-  }
-}
-
-const onButtonRelease = (event: MouseEvent) => {
-  const icon = (event.currentTarget as HTMLElement).querySelector('.material-symbols-rounded')
-  if (icon) {
-    icon.classList.remove('pressed')
-  }
-}
 </script>
 
 <style scoped>
