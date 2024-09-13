@@ -167,7 +167,7 @@ watch(
   }
 )
 
-watch(volume, (newVolume) => {
+watch(volume, () => {
   updateSliderValue()
 })
 </script>
