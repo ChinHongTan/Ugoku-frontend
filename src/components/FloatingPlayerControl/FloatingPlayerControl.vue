@@ -57,12 +57,15 @@ interface Song {
   artist: string
   cover?: string
   duration: number
-  playback_start_time: string
+  playback_start_time?: string | number
 }
 
 const playerStore = usePlayerStore()
 
-const currentSong = computed<Song | null>(() => playerStore.currentSong)
+const currentSong = computed<Song | null>({
+  get: () => playerStore.currentSong,
+  set: (value) => {}
+})
 const isPlaying = computed<boolean>(() => playerStore.isPlaying)
 const isServerSelected = computed<boolean>(() => playerStore.selectedServerId !== null)
 
@@ -135,7 +138,7 @@ const startProgressInterval = () => {
     if (!isDragging.value) {
       currentPosition.value = calculateCurrentPosition()
     }
-  }, 1000) // Update every second
+  }, 1000) as unknown as number // Update every second
 }
 
 const stopProgressInterval = () => {

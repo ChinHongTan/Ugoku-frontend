@@ -8,8 +8,7 @@ export function subscribeToActiveServers() {
   if (eventSource) return // Prevent multiple connections
 
   eventSource = new EventSourcePolyfill('http://localhost:8000/play/stream')
-
-  eventSource.onmessage = (event: MessageEvent) => {
+  ;(eventSource as any).onmessage = (event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data)
 
@@ -44,8 +43,7 @@ export function subscribeToActiveServers() {
       console.error('Error parsing SSE data:', error)
     }
   }
-
-  eventSource.onerror = (error: Event) => {
+  ;(eventSource as any).onerror = (error: Event) => {
     console.error('SSE error:', error)
     eventSource?.close()
     eventSource = null

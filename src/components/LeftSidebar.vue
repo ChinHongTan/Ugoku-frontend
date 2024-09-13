@@ -22,10 +22,11 @@ const handleServerClick = (serverId: string) => {
   playerStore.setSelectedServer(serverId)
 }
 
-let unsubscribe: (() => void) | null = null
+let unsubscribe: (() => void) | null | undefined = null
 
 onMounted(() => {
-  unsubscribe = subscribeToActiveServers()
+  const result = subscribeToActiveServers()
+  unsubscribe = result ? result : null
 
   // Update activeServers when serverSongs change
   playerStore.$subscribe((mutation, state) => {
