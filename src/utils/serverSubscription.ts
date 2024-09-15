@@ -7,7 +7,7 @@ export function subscribeToActiveServers() {
 
   if (eventSource) return // Prevent multiple connections
 
-  eventSource = new EventSourcePolyfill('http://localhost:8000/play/stream')
+  eventSource = new EventSourcePolyfill('https://app.ugoku.moe/play/stream')
   ;(eventSource as any).onmessage = (event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data)

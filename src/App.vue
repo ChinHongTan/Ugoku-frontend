@@ -92,7 +92,7 @@ export default {
   methods: {
     async sendRequest() {
       try {
-        const response = await axios.get('http://localhost:8000/')
+        const response = await axios.get('https://app.ugoku.moe/')
         this.response = response.data
       } catch (error) {
         console.error(error)
@@ -101,7 +101,7 @@ export default {
     },
     async login() {
       try {
-        const response = await axios.get('http://localhost:8000/auth/discord')
+        const response = await axios.get('https://app.ugoku.moe/auth/discord')
         this.response = response.data
       } catch (error) {
         console.error(error)

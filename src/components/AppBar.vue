@@ -39,7 +39,7 @@ const logout = async () => {
     }
     // Send POST request to server to logout
     await axios.post(
-      'http://localhost:8000/auth/logout',
+      'https://app.ugoku.moe/auth/logout',
       {},
       {
         headers: {
@@ -63,7 +63,7 @@ onMounted(async () => {
   const token = localStorage.getItem('token')
   if (token && !userStore.user) {
     try {
-      const response = await axios.get(`http://localhost:8000/api/user`, {
+      const response = await axios.get(`https://app.ugoku.moe/api/user`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -116,7 +116,7 @@ onMounted(async () => {
       <a
         v-else
         class="login right-align green"
-        href="https://discord.com/oauth2/authorize?client_id=958201832528838706&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fauth%2Fdiscord&scope=identify+guilds"
+        href="https://discord.com/oauth2/authorize?client_id=958201832528838706&response_type=code&redirect_uri=http%3A%2F%2Fapp.ugoku.moe%2Fauth%2Fdiscord&scope=identify+guilds"
       >
         Login with discord
       </a>

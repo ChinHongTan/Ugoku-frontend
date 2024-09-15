@@ -38,7 +38,7 @@ const addToBotUrl = ref(
   'https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=YOUR_PERMISSIONS&scope=bot'
 )
 const loginUrl = ref(
-  'https://discord.com/oauth2/authorize?client_id=958201832528838706&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fauth%2Fdiscord&scope=identify+guilds'
+  'https://discord.com/oauth2/authorize?client_id=958201832528838706&response_type=code&redirect_uri=http%3A%2F%2Fapp.ugoku.moe%2Fauth%2Fdiscord&scope=identify+guilds'
 )
 
 onMounted(() => {

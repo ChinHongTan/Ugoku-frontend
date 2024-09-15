@@ -42,7 +42,7 @@ enum LoopMode {
 
 // Base axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'https://app.ugoku.moe/api',
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${localStorage.getItem('token')}`
