@@ -116,7 +116,7 @@ onMounted(async () => {
       <a
         v-else
         class="login right-align green"
-        href="https://discord.com/oauth2/authorize?client_id=1279047244850401353&response_type=code&redirect_uri=https%3A%2F%2Fapp.ugoku.moe%2Fauth%2Fdiscord&scope=identify+guilds"
+        href="https://discord.com/oauth2/authorize?client_id=1277272946519314533&response_type=code&redirect_uri=https%3A%2F%2Fapp.ugoku.moe%2Fauth%2Fdiscord&scope=identify+guilds"
       >
         Login with discord
       </a>
